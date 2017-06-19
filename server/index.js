@@ -227,7 +227,10 @@ exports.defaultConfig = function() {
 		mime: {
 			'.css': 'text/css',
 			'.jpg': 'image/jpeg',
+			'.jpeg': 'image/jpeg',
 			'.js': 'text/js',
+			'.html': 'text/html',
+			'.htm': 'text/html',
 		}
 	};
 }

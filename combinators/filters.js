@@ -2,7 +2,9 @@ const {zip} = require('../util/misc.js');
 const {response} = require('./output.js');
 
 /**
- *	combinators/filters
+ *	Sugar.Combinators.Filters
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Combinators for filtering requests by
  *	the information contained within them.
@@ -10,7 +12,7 @@ const {response} = require('./output.js');
 
 
 /**
- *	test :: (HTTPContext -> boolean) -> string -> WebPart
+ *	test :: (HttpContext -> boolean) -> string -> WebPart
  *
  *	Useful to create combinators that test the current
  *	request context for some property to filter requests.
@@ -31,26 +33,64 @@ function test(pred, err) {
 	}
 }
 
-/** Combinator using test on the HTTP request method **/
+/**
+ *	method :: string -> WebPart
+ *
+ *	Create a WebPart that filters on an HTTP Method.
+ */
 function method(m) {
 	return test(ctx => ctx.request.method === m,
 	 "Not " + m + " request");
 }
 
-/** Combinators to filter by HTTP method **/
+/**
+ *	GET :: WebPart
+ *
+ *	Filters out requests that are not HTTP GET
+ */
 exports.GET = method("GET");
+/**
+ *	PUT :: WebPart
+ *
+ *	Filters out requests that are not HTTP PUT
+ */
 exports.PUT = method("PUT");
+/**
+ *	DELETE :: WebPart
+ *
+ *	Filters out requests that are not HTTP DELETE
+ */
 exports.DELETE = method("DELETE");
+/**
+ *	POST :: WebPart
+ *
+ *	Filters out requests that are not HTTP POST
+ */
 exports.POST = method("POST");
+/**
+ *	HEAD :: WebPart
+ *
+ *	Filters out requests that are not HTTP HEAD
+ */
 exports.HEAD = method("HEAD");
 
-/** Combinator to filter by the URI **/
+/**
+ *	path :: string -> WebPart
+ *
+ *	Filters out requests whose URI does not match
+ *	the provided URI.
+ */
 exports.path = function(pathStr) {
 	return test(ctx => ctx.request.url === pathStr,
 	 "Path match failure");
 }
 
-/** Combinator to filter by URI starting with string **/
+/**
+ *	pathStarts :: string -> WebPart
+ *
+ *	Filters out requests whose URI does not start
+ *	with the provided URI.
+ */
 exports.pathStarts = function(pathStr) {
 	return test(
 		ctx => ctx.request.url.startsWith(pathStr),
@@ -109,7 +149,7 @@ function extract(pattern, text) {
 /**
  *	pathMatch :: string -> (...int|number|string -> WebPart) -> WebPart
  *
- *	Matches a pattern in the style of scanf in the Web Context's
+ *	Matches a pattern in the style of scanf in the request's
  *	path, extracts the arguments from the path, and passes them to
  *	the provided function to get the resulting web part.
  */
@@ -125,7 +165,6 @@ exports.pathMatch = function(pattern, mapper) {
 
 /**
  *	choose :: [WebPart] -> WebPart
- *	choose :: [HttpContext -> Promise HttpContext] -> HttpContext -> Promise HttpContext
  *
  *	Picks from a list of WebParts by choosing the first WebPart that
  *	accepts the HttpContext provided.

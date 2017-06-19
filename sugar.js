@@ -1,4 +1,23 @@
-// WebPart = HttpContext -> Promise HttpContext
+/**
+ *	Sugar
+ *	written by Joel Dentici
+ *	on 6/18/2017
+ *	
+ *	Sugar exports all the submodules used by the web application
+ *	library.
+ *
+ *	A few useful functions to dynamically use WebPart combinators
+ *	are provided in this module.
+ */
+
+
+/**
+ *	WebPart :: HttpContext -> Promise HttpContext
+ *
+ *	WebPart is the type of combinators used in
+ *	Sugar.
+ */
+
 
 /*
 HttpRequest = {
@@ -36,10 +55,10 @@ HttpContext = {
 
 
 /**
- *	request :: (HTTPRequest -> WebPart) -> WebPart
+ *	request :: (HttpRequest -> WebPart) -> WebPart
  *
  *	Allows application code to easily get access to
- *	an outstanding HTTPRequest and return a WebPart
+ *	an outstanding HttpRequest and return a WebPart
  *	based off of it.
  */
 exports.request = function(fn) {
@@ -49,7 +68,7 @@ exports.request = function(fn) {
 }
 
 /**
- *	context :: (HTTPContext -> WebPart) -> WebPart
+ *	context :: (HttpContext -> WebPart) -> WebPart
  *
  *	See request, but lets the application inspect
  *	the context instead.
@@ -61,11 +80,11 @@ exports.context = function(fn) {
 }
 
 /**
- *	asyncRequest :: (HTTPRequest -> Promise WebPart) -> WebPart
+ *	asyncRequest :: (HttpRequest -> Promise WebPart) -> WebPart
  *
  *	Like request, but the function provided returns a promise
  *	for a WebPart instead of a WebPart. This allows the function
- *	to perform asynchronous handling of the HTTPRequest (such as
+ *	to perform asynchronous handling of the HttpRequest (such as
  *	loading a file, making some network request, etc.), and only
  *	worry about calling a combinator to construct a WebPart, and
  *	not have to worry about piping the context in themselves.
@@ -77,7 +96,7 @@ exports.asyncRequest = function(fn) {
 }
 
 /**
- *	asyncContext :: (HTTPContext -> Promise WebPart) -> WebPart
+ *	asyncContext :: (HttpContext -> Promise WebPart) -> WebPart
  *
  *	See asyncRequest
  */
@@ -87,8 +106,8 @@ exports.asyncContext = function(fn) {
 	}
 }
 
-exports.Operators = require('./operators.js');
-exports.Server = require('./server.js');
+exports.Operators = require('./operators/index.js');
+exports.Server = require('./server/index.js');
 exports.Combinators = {
 	Authentication: require('./combinators/authentication.js'),
 	Files: require('./combinators/files.js'),

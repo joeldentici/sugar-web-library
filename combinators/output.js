@@ -1,5 +1,7 @@
 /**
- *	combinators/output
+ *	Sugar.Combinators.Output
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Provides combinators for creating and
  *	modifying HTTP responses.

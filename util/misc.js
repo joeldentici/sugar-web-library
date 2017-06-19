@@ -1,5 +1,7 @@
 /**
- *	util/misc
+ *	Sugar.Util.Misc
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Miscellaneous utility functions
  */
@@ -39,7 +41,7 @@ exports.delayFor = function(timespan) {
 /**
  *	sequence :: [a_0 -> a_1,...,a_n-1 -> a_n] -> a_0 -> a_n
  *
- *	Left to right composition of unary functions
+ *	Left to right composition of unary functions.
  */
 exports.sequence = function(...fns) {
 	return function(value) {

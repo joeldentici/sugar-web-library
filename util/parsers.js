@@ -1,3 +1,23 @@
+/**
+ *	Sugar.Util.Parsers
+ *	written by Joel Dentici
+ *	on 6/18/2017
+ *
+ *	This module provides functions to parse
+ *	incoming request data.
+ *
+ *	Node's http module already does most of the parsing of the HTTP request,
+ *	but these functions allow us to do some of the additional
+ *	parsing that allows providing the application developer with request
+ *	parameters (form data, query string data, etc.).
+ */
+
+/**
+ *	parseQuery :: string -> Map string string
+ *
+ *	Takes a URI Encoded form and parses it into
+ *	a map of key-value string pairs (actually an object).
+ */
 const parseQuery = exports.parseQuery = function(query) {
 	return (query || '')
 		.split("&")
@@ -8,6 +28,12 @@ const parseQuery = exports.parseQuery = function(query) {
 		}, {});
 }
 
+/**
+ *	parseUrl :: string -> (string, Map string string)
+ *
+ *	Takes a URI and splits it into the URI and query string
+ *	components, and parses the query string.
+ */
 exports.parseUrl = function(input) {
 	const [url, query] = input.split("?");
 

@@ -1,51 +1,55 @@
 const http = require('http');
 const https = require('https');
-const {parseUrl, parseQuery} = require('./util/parsers.js');
+const {parseUrl, parseQuery} = require('../util/parsers.js');
 const fs = require('fs');
 /**
- *	server
+ *	Sugar.Server
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	This module implements the HTTP/HTTPS
  *	server functionality for Sugar.
  *
- *	A single function, startWebServer is
- *	exported that takes a configuration object,
- *	specifying details about the HTTP(S) server
- *	runtime, and a WebPart, which is used to process
- *	each web request.
+ *	This module exports two functions:
+ *	startWebServer and defaultConfig
  */
 
 
 /**
- *	formParsers :: Map string (Buffer -> Object)
+ *	formParsers :: Map string (Buffer -> Map string string)
  *
  *	Map content types to functions that will
- *	parse the request body
+ *	parse the request body.
  */
 const formParsers = {
 	'application/x-www-form-urlencoded': parseUrlEncodedForm,
 };
 
 /**
- *	parseUrlEncodedForm :: Buffer -> Object
+ *	parseUrlEncodedForm :: Buffer -> Map string string
+ *
+ *	Parses a form that is urlencoded by using
+ *	the URI query string parser.
  */
 function parseUrlEncodedForm(rawForm) {
 	return parseQuery(rawForm.toString());
 }
 
 /**
- *	getFormParser :: string -> Buffer -> Object
+ *	getFormParser :: string -> Buffer -> Map string string
  *
- *	Gets a form parser for a content type
+ *	Gets a form parser for a content type. If no
+ *	parser is defined for the content type, then a parser
+ *	that returns an empty form is returned.
  */
 function getFormParser(contentType) {
 	return formParsers[contentType] || (rawForm => {});
 }
 
 /**
- *	getRawForm :: NodeHTTPRequest -> Promise Buffer
+ *	getRawForm :: NodeHttpRequest -> Promise Buffer
  *
- *	Extracts the data from the Node HTTP Server Request
+ *	Extracts the data from the Node HTTP Server Request.
  */
 function getRawForm(req) {
 	return new Promise((res, rej) => {
@@ -56,7 +60,7 @@ function getRawForm(req) {
 }
 
 /**
- *	parseRequest :: NodeHTTPRequest -> Promise HTTPRequest
+ *	parseRequest :: NodeHttpRequest -> Promise HttpRequest
  *
  *	Performs further processing on the incoming node HTTP Request
  *	before mapping it to a Sugar HTTP Request and returning it in
@@ -105,10 +109,6 @@ function createContext(req, res, config) {
 			},
 			runtime: {
 				mime: config.mime,
-				//TODO: GET THESE VALUES FROM CONFIG
-				/*mime: {
-					'.css': 'text/css',
-				}*/
 			}
 		}));
 }
@@ -211,6 +211,15 @@ function startWebServer(config, app) {
 }
 
 exports.startWebServer = startWebServer;
+
+/**
+ *	defaultConfig :: () -> Object
+ *
+ *	A constant function that returns the default Sugar
+ *	application configuration object. The returned object
+ *	can be modified before being passed to startWebServer to
+ *	change properties of the web server.
+ */
 exports.defaultConfig = function() {
 	return {
 		port: 8080,

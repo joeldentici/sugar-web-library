@@ -1,8 +1,9 @@
 const {text} = require('./output.js');
 
 /**
- *	combinators/servererrors
- *	5xx
+ *	Sugar.Combinators.ServerErrors
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Combinators for serving 5xx status HTTP responses
  */

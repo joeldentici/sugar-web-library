@@ -6,10 +6,22 @@ const {asyncRequest} = require('../sugar.js');
 const {NOT_FOUND} = require('./requesterrors.js');
 
 /**
- *	combinators/files
+ *	Sugar.Combinators.Files
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Functions for interacting with the filesystem
- *	and combinators for serving static files.
+ *	and combinators for serving static files. These
+ *	combinators can also be used with a custom file loading
+ *	scheme (see below).
+ *
+ *	Files are represented as an object containing a suggested name
+ *	for the file, a readable stream of the file's contents, and the
+ *	size in bytes of the file. If you construct an object like this,
+ *	it can be provided to the send or download combinators, depending
+ *	on what you would like the user's browser to do with the file (note
+ *	that the browser can choose to ignore the headers set by download
+ *	and not actually download the file to the file system).
  */
 
 /**
@@ -48,6 +60,7 @@ const openFile = exports.openFile = function(name) {
  *	to the client. Sent in an HTTP 200 OK response.
  *
  *	The Content-Type header will be set as follows:
+ *
  *		If the extension in file.name is in context.runtime.mime
  *		then the mime type will be used
  *
@@ -74,7 +87,8 @@ const send = exports.send = function(file) {
  *	Web Part that will cause a typical web browser to download
  *	a file with a specified file name. The file is sent in an HTTP 200 OK
  *	response. This is equivalent to send, but will attempt to force a browser
- *	to download the file.
+ *	to download the file and will suggest that the browser uses the file name
+ *	provided by the file object.
  */
 const download = exports.download = function(file) {
 	return send(file)
@@ -108,7 +122,8 @@ const sendFile = exports.sendFile = function(filePath) {
  *	resolvePath :: string -> string -> string
  *
  *	Resolves the file name provided relative to the root
- *	path provided
+ *	path provided. The resulting path is guaranteed to be
+ *	a subpath of the rootPath.
  */
 const resolvePath = exports.resolvePath = function(rootPath, fileName) {
 	fileName = fileName.replace(/\//g, path.sep);

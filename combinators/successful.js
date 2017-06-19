@@ -1,8 +1,9 @@
 const {text, response} = require('./output.js');
 
 /**
- *	combinators/successful
- *	2xx
+ *	Sugar.Combinators.Successful
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Combinators for serving HTTP 2xx status responses.
  */

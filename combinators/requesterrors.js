@@ -1,8 +1,9 @@
 const {text, setHeader} = require('./output.js');
 
 /**
- *	combinators/requesterrors
- *	4xx
+ *	Sugar.Combinators.RequestErrors
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Combinators for serving 4xx status
  *	HTTP responses.

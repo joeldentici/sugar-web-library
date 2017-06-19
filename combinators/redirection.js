@@ -1,8 +1,9 @@
 const {response, setHeader, mime} = require('./output.js');
 
 /**
- *	combinators/redirection
- *	3xx
+ *	Sugar.Combinators.Redirection
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Combinators for HTTP 3xx status responses.
  */
@@ -27,7 +28,9 @@ exports.redirect = function(url) {
 /**
  *	NOT_MODIFIED :: WebPart
  *
- *	HTTP 304 Not Modified Web Part response
+ *	HTTP 304 Not Modified Web Part response. The
+ *	browser should load the requested resource from
+ *	its cache.
  */
 exports.NOT_MODIFIED = response(304)('');
 

@@ -1,8 +1,9 @@
 const {response} = require('./output.js');
 
 /**
- *	combinators/intermediate
- *	1xx
+ *	Sugar.Combinators.Intermediate
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *	
  *	Combinators for serving HTTP 1xx status responses
  */

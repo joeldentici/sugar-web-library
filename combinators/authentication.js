@@ -1,7 +1,9 @@
 const {challenge} = require('./requesterrors.js');
 
 /**
- *	combinators/authentication
+ *	Sugar.Combinators.Authentication
+ *	written by Joel Dentici
+ *	on 6/18/2017
  *
  *	Provides combinators for performing
  *	basic HTTP authentication/authorization.
@@ -60,7 +62,8 @@ const authenticateBasicAsync = exports.authenticateBasicAsync = function(test, p
 /**
  *	authenticateBasic :: (string -> string -> bool) -> WebPart -> WebPart
  *
- *	See authenticateBasicAsync
+ *	See authenticateBasicAsync. This is the same thing but for a validation
+ *	function that is not asynchronous.
  */
 exports.authenticateBasic = function(test, part) {
 	return authenticateBasicAsync(

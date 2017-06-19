@@ -1,7 +1,9 @@
-const {setHeader, response} = require('./output.js');
+const {setHeader, response, mime} = require('./output.js');
 const fs = require('fs');
 const path = require('path');
 const {promisfy} = require('../util/misc.js');
+const {asyncRequest} = require('../sugar.js');
+const {NOT_FOUND} = require('./requesterrors.js');
 
 /**
  *	combinators/files
@@ -25,26 +27,124 @@ const stat = promisfy(fs.stat);
 const openFile = exports.openFile = function(name) {
 	const fileName = name.substring(name.lastIndexOf(path.sep) + 1);
 	return stat(name)
-		.then(({size}) => ({
-			//remove any / or \ left in the file name to play
-			//nicely with the other opposite OS when they are
-			//the client
-			name: fileName.replace(/\|\\\//g, '-'),
-			stream: fs.createReadStream(name),
-			size,
-		}));
+		.then(stats => {
+			if (stats.isFile()) {
+				return {
+					name: fileName.replace(/\|\\\//g, '-'),
+					stream: fs.createReadStream(name),
+					size: stats.size,
+				}
+			}
+			else {
+				return Promise.reject(new Error("Not a file"));
+			}
+		});
 }
 
 /**
  *	send :: File -> WebPart
  *
- *	Web Part that will cause a typical web browser to download
- *	a file with a specified file name. The file is sent in an HTTP 200 OK
- *	response.
+ *	WebPart that send the byte stream contained in the file object
+ *	to the client. Sent in an HTTP 200 OK response.
+ *
+ *	The Content-Type header will be set as follows:
+ *		If the extension in file.name is in context.runtime.mime
+ *		then the mime type will be used
+ *
+ *		Otherwise, 'application/octet-stream' will be used, which
+ *		will cause most browsers to download the file
  */
 const send = exports.send = function(file) {
-	return response(200)(file.stream)
-		.arrow(setHeader('Content-Type')(file.mime || 'application/octet-stream'))
-		.arrow(setHeader('Content-Disposition')('attachment; filename='+file.name))
-		.arrow(setHeader('Content-Length')(file.size));
+	return function(context) {
+		const extension = path.extname(file.name);
+		const mimeType = context.runtime.mime[extension]
+			|| 'application/octet-stream';
+
+		const handle = response(200)(file.stream)
+			.arrow(mime(mimeType))
+			.arrow(setHeader('Content-Length')(file.size));
+
+		return handle(context);
+	}
+}
+
+/**
+ *	download :: File -> WebPart
+ *
+ *	Web Part that will cause a typical web browser to download
+ *	a file with a specified file name. The file is sent in an HTTP 200 OK
+ *	response. This is equivalent to send, but will attempt to force a browser
+ *	to download the file.
+ */
+const download = exports.download = function(file) {
+	return send(file)
+		.arrow(setHeader('Content-Disposition')('attachment; filename='+file.name));
+}
+
+
+/**
+ *	downloadFile :: string -> Promise WebPart
+ *
+ *	Loads a file from disk asynchronously and then maps it
+ *	to a web part that will download the file.
+ */
+const downloadFile = exports.downloadFile = function(filePath) {
+	return openFile(filePath)
+		.then(download, e => NOT_FOUND("The requested file could not be found: " + e.toString()));
+}
+
+/**
+ *	sendFile :: string -> Promise WebPart
+ *
+ *	Loads a file from disk asynchronously and then maps it
+ *	to a web part that will send the file.
+ */
+const sendFile = exports.sendFile = function(filePath) {
+	return openFile(filePath)
+		.then(send, e => NOT_FOUND("The requested file could not be found: " + e.toString()));
+}
+
+/**
+ *	resolvePath :: string -> string -> string
+ *
+ *	Resolves the file name provided relative to the root
+ *	path provided
+ */
+const resolvePath = exports.resolvePath = function(rootPath, fileName) {
+	fileName = fileName.replace(/\//g, path.sep);
+
+	if (fileName[0] === path.sep) {
+		fileName = fileName.substring(1);
+	}
+
+	const result = path.normalize(path.join(rootPath, fileName));
+	if (result.startsWith(rootPath)) {
+		return result;
+	}
+	else {
+		throw new Error("Path resolution error");
+	}
+}
+
+/**
+ *	browse :: string -> (string -> string) -> WebPart
+ *
+ *	Returns a WebPart that allows the user to
+ *	browse a portion of the file system. Takes
+ *	the root path to browse at and a function to map
+ *	paths. Handles path resolution.
+ */
+const browse = exports.browse = function(rootPath, urlMap = (x => x)) {
+	return asyncRequest(request => 
+		sendFile(resolvePath(rootPath, urlMap(request.url))));
+}
+
+/**
+ *	browsePath :: string -> string -> WebPart
+ *
+ *	Browse relative to the rootPath on the file system, excluding
+ *	startPath from the URL.
+ */
+const browsePath = exports.browsePath = function(rootPath, startPath) {
+	return browse(rootPath, x => x.substring(startPath.length));
 }

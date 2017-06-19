@@ -1,4 +1,3 @@
-const {arrow, alt} = require('./operators.js');
 // WebPart = HttpContext -> Promise HttpContext
 
 /*
@@ -34,26 +33,7 @@ HttpContext = {
 
 
 */
-exports.startWebServer = require('./server.js').startWebServer;
-exports.Combinators = {
-	Authentication: require('./combinators/authentication.js'),
-	Files: require('./combinators/files.js'),
-	Filters: require('./combinators/filters.js'),
-	Intermediate: require('./combinators/intermediate.js'),
-	Misc: require('./combinators/misc.js'),
-	Output: require('./combinators/output.js'),
-	Redirection: require('./combinators/redirection.js'),
-	RequestErrors: require('./combinators/requesterrors.js'),
-	ServerErrors: require('./combinators/servererrors.js'),
-	Successful: require('./combinators/successful.js'),
-};
-exports.Util = {
-	Misc: require('./util/misc.js'),
-	Parsers: require('./util/parsers.js'),
-};
 
-exports.arrow = arrow;
-exports.alt = alt;
 
 /**
  *	request :: (HTTPRequest -> WebPart) -> WebPart
@@ -106,3 +86,22 @@ exports.asyncContext = function(fn) {
 		return fn(context).then(f => f(context));
 	}
 }
+
+exports.Operators = require('./operators.js');
+exports.Server = require('./server.js');
+exports.Combinators = {
+	Authentication: require('./combinators/authentication.js'),
+	Files: require('./combinators/files.js'),
+	Filters: require('./combinators/filters.js'),
+	Intermediate: require('./combinators/intermediate.js'),
+	Misc: require('./combinators/misc.js'),
+	Output: require('./combinators/output.js'),
+	Redirection: require('./combinators/redirection.js'),
+	RequestErrors: require('./combinators/requesterrors.js'),
+	ServerErrors: require('./combinators/servererrors.js'),
+	Successful: require('./combinators/successful.js'),
+};
+exports.Util = {
+	Misc: require('./util/misc.js'),
+	Parsers: require('./util/parsers.js'),
+};

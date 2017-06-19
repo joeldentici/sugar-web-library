@@ -7,6 +7,7 @@
 Promise.prototype.bind = Promise.prototype.then;
 
 /**
+ *	arrow :: (a -> m b) -> (b -> m c) -> (a -> m c)
  *	Kleisi Composition of monadic
  *	functions
  */
@@ -17,13 +18,16 @@ function arrow(a, b) {
 }
 
 /**
- *	alt :: (a -> Promise b) -> (a -> Promise b) -> a -> Promise b
+ *	or :: (a -> Promise b) -> (a -> Promise b) -> a -> Promise b
  *
  *	Returns a new function that will try the first
  *	function, then try the second function if the
  *	first one fails.
+ *
+ *	This is an alternative instance for promise returning
+ *	functions.
  */
-function alt(a, b) {
+function or(a, b) {
 	return function(x) {
 		return a(x)
 			.then(x => x,
@@ -45,5 +49,9 @@ Function.prototype.arrow = function(b) {
 	return arrow(this, b);
 }
 
+Function.prototype.or = function(b) {
+	return or(this, b);
+}
+
 exports.arrow = arrow;
-exports.alt = alt;
+exports.or = or;

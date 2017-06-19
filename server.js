@@ -89,12 +89,12 @@ function parseRequest(req) {
 }
 
 /**
- *	createContext :: Object -> Object -> Promise HttpContext
+ *	createContext :: Object -> Object -> Object -> Promise HttpContext
  *
  *	Extracts and further parses the request data from the
  *	node HTTP server to create a Sugar HttpContext
  */
-function createContext(req, res) {
+function createContext(req, res, config) {
 	return parseRequest(req)
 		.then(request => ({
 			request,
@@ -102,6 +102,13 @@ function createContext(req, res) {
 				status: 0,
 				headers: {},
 				content: '',
+			},
+			runtime: {
+				mime: config.mime,
+				//TODO: GET THESE VALUES FROM CONFIG
+				/*mime: {
+					'.css': 'text/css',
+				}*/
 			}
 		}));
 }
@@ -161,7 +168,7 @@ function startWebServer(config, app) {
 	//for requests
 	function handler(req, res) {
 		//create context for the request
-		createContext(req, res)
+		createContext(req, res, config)
 			.then(app) //then run it through the application
 			.then(x => {
 				//write the response headers and status
@@ -204,3 +211,15 @@ function startWebServer(config, app) {
 }
 
 exports.startWebServer = startWebServer;
+exports.defaultConfig = function() {
+	return {
+		port: 8080,
+		host: 'localhost',
+		mime: {
+			'.css': 'text/css',
+			'.jpg': 'image/jpeg',
+			'.js': 'text/js',
+		}
+	};
+}
+	

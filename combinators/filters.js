@@ -8,41 +8,33 @@ const {response} = require('./output.js');
  *	the information contained within them.
  */
 
-/**
- *	test :: JsonPath -> string -> string -> HttpContext -> Promise HttpContext
- *
- *	Creates Web Parts that test the HttpContext for some criteria.
- *
- *	It is expected that the property found by following the provided
- *	path in the input HttpContext will be equal to the provided expected
- *	value for the property. If it is, then the context is propagated. If not,
- *	the provided error message is propagated.
- */
-function test(jsonPath, expected, err) {
-	jsonPath = jsonPath.split(".");
-	return function(context) {
-		//resolve the json path in context
-		actual = context;
-		for (let x of jsonPath) {
-			if (actual === null) break;
-			actual = actual[x];
-		}
 
-		//couldn't resolve path
-		if (actual === null)
-			return Promise.reject("Bad JSON Path in test: " + jsonPath);
-		//test passed
-		else if (actual === expected)
+/**
+ *	test :: (HTTPContext -> boolean) -> string -> WebPart
+ *
+ *	Useful to create combinators that test the current
+ *	request context for some property to filter requests.
+ *
+ *	If the predicate returns true for a request, then the
+ *	composition path on the returned combinator will be
+ *	followed. Otherwise, the returned combinator will fail
+ *	to match the request and signal an error.
+ */
+function test(pred, err) {
+	return function(context) {
+		if (pred(context)) {
 			return Promise.resolve(context);
-		//test failed
-		else
+		}
+		else {
 			return Promise.reject(err);
+		}
 	}
 }
 
 /** Combinator using test on the HTTP request method **/
 function method(m) {
-	return test("request.method", m, "Not " + m + " request");
+	return test(ctx => ctx.request.method === m,
+	 "Not " + m + " request");
 }
 
 /** Combinators to filter by HTTP method **/
@@ -54,10 +46,16 @@ exports.HEAD = method("HEAD");
 
 /** Combinator to filter by the URI **/
 exports.path = function(pathStr) {
-	return test("request.url", pathStr, "Path match failure");
+	return test(ctx => ctx.request.url === pathStr,
+	 "Path match failure");
 }
 
-
+/** Combinator to filter by URI starting with string **/
+exports.pathStarts = function(pathStr) {
+	return test(
+		ctx => ctx.request.url.startsWith(pathStr),
+		'Path match failure');
+}
 
 /**
  *	extract :: string -> string -> [int|number|string]

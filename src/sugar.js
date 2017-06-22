@@ -121,6 +121,5 @@ exports.Combinators = {
 	Successful: require('./combinators/successful.js'),
 };
 exports.Util = {
-	Misc: require('./util/misc.js'),
 	Parsers: require('./util/parsers.js'),
 };

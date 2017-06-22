@@ -1,7 +1,7 @@
 const {setHeader, response, mime} = require('./output.js');
 const fs = require('fs');
 const path = require('path');
-const {promisfy} = require('../util/misc.js');
+const {promisfy} = require('js-helpers');
 const {asyncRequest} = require('../sugar.js');
 const {NOT_FOUND} = require('./requesterrors.js');
 

@@ -1,5 +1,5 @@
 const {REQUEST_TIMEOUT} = require('./requesterrors.js');
-const {delayFor} = require('../util/misc.js');
+const {waitFor: delayFor} = require('js-helpers');
 /**
  *	Sugar.Combinators.Misc
  *	written by Joel Dentici

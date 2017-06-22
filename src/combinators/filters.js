@@ -1,4 +1,4 @@
-const {zip} = require('../util/misc.js');
+const {zip} = require('js-helpers');
 const {response} = require('./output.js');
 
 /**

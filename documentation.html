@@ -1,0 +1,1990 @@
+
+	<html>
+		<head>
+			<title>Sugar Documentation</title>
+			<style>
+				.module-header, .module-description {
+					background-color: #EFEFEF;
+				}
+
+				.function-description {
+					background-color: #DDD;
+				}
+
+				.module-header {
+					border: 1px solid;
+					border-radius: 5px;
+					padding: 10px;
+					margin: 10px 0 10px 0;
+				}
+				.module-name {
+					font-weight: bold;
+				}
+				.module-description .module-name {
+					font-size: 120%;
+				}
+				ul.module-functions {
+					list-style: none;
+				}
+				.module-description {
+					border: 1px solid;
+					border-radius: 5px;
+					padding: 10px;
+					margin: 10px 0 10px 0;
+				}
+				.module-name, .module-author,
+				.module-date {
+					margin: 2px 0 2px 0;
+				}
+				.module-desc {
+					margin: 10px 0 10px 20px;
+				}
+
+				.function-description {
+					backgound-color: #EFEFEF;
+					border: 1px dotted;
+					border-radius: 5px;
+					padding: 10px;
+					margin: 5px 0 5px 0;
+				}
+
+				.function-desc {
+					margin: 5px 0 5px 20px;
+				}
+
+				a:visited {
+					color: #00F
+				}
+
+				a {
+					text-decoration: none;
+					border-bottom: 1px solid transparent;
+					transition: all ease-in-out 0.5s;
+				}
+
+				a:hover {
+					text-decoration: none;
+					border-color: #00F;
+				}
+
+				.top-scroll {
+					position: fixed;
+					bottom: 0;
+					right: 10px;
+					font-weight: bold;
+					font-size: 180%;
+					border: 1px solid;
+					border-radius: 5px;
+					padding: 10px 20px;
+					background-color: #EFEFEF;
+					opacity: 0.8;
+					cursor: pointer;
+				}
+			</style>
+			<script type="text/javascript">
+				window.onload = function() {
+					var links = document.querySelectorAll('a');
+					links.forEach(link => link.addEventListener('click', function(e) {
+						e.preventDefault();
+						var elm = this.href.substring(this.href.indexOf('#') + 1);
+						scrollToItemId(elm, 2);
+					}));
+
+					document.querySelector('.top-scroll').addEventListener('click', function() {
+						scrollToItemId('top', 2);
+					});
+
+					window.onscroll();
+				}
+
+				window.onscroll = function() {
+					document.querySelector('.top-scroll').style.visibility = 
+						document.body.scrollTop > 100 ? 'visible' : 'hidden';
+				}
+
+				function scrollToItemId(scrollToId, scrollTime) {
+					scrollTime *= 1000;
+			        var item = document.getElementById(scrollToId);
+
+			        var from = document.body.scrollTop;
+			        var to = item.offsetTop;
+
+			        var startTime = Date.now();
+
+				    function ease(k) {
+				    	return 0.5 * (1 - Math.cos(Math.PI * k));
+				    }
+
+			        (function scroll() {
+			        	var elapsed = (Date.now() - startTime) / scrollTime;
+			        	if (elapsed > 1)
+			        		elapsed = 1;
+			        	var change = ease(elapsed);
+			        	var currentPos = from + (to - from) * change;
+
+			            document.body.scrollTop = currentPos;
+			            if (currentPos !== to) {
+			                requestAnimationFrame(scroll);
+			            }
+			            else {
+			            	window.location.hash = '#' + scrollToId;
+			            }
+			        })();
+			    }
+			</script>
+		</head>
+		<body>
+			<div class="project-header" id="top">
+			<h1>Sugar Documentation</h1>
+			</div>
+			<div class="project-synopsis">
+			<h2>Module List</h2>
+			
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar">Sugar</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.func.WebPart">
+					<b>WebPart</b>
+				</a> <b>::</b> HttpContext &#8594; Promise HttpContext
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.func.request">
+					<b>request</b>
+				</a> <b>::</b> (HttpRequest &#8594; WebPart) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.func.context">
+					<b>context</b>
+				</a> <b>::</b> (HttpContext &#8594; WebPart) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.func.asyncRequest">
+					<b>asyncRequest</b>
+				</a> <b>::</b> (HttpRequest &#8594; Promise WebPart) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.func.asyncContext">
+					<b>asyncContext</b>
+				</a> <b>::</b> (HttpContext &#8594; Promise WebPart) &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Authentication">Sugar.Combinators.Authentication</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Authentication.func.parseAuthHeader">
+					<b>parseAuthHeader</b>
+				</a> <b>::</b> string &#8594; (string, string, string)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Authentication.func.authenticateBasicAsync">
+					<b>authenticateBasicAsync</b>
+				</a> <b>::</b> (string &#8594; string &#8594; Promise bool) &#8594; WebPart &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Authentication.func.authenticateBasic">
+					<b>authenticateBasic</b>
+				</a> <b>::</b> (string &#8594; string &#8594; bool) &#8594; WebPart &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Files">Sugar.Combinators.Files</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.stat">
+					<b>stat</b>
+				</a> <b>::</b> string &#8594; Promise Object Error
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.openFile">
+					<b>openFile</b>
+				</a> <b>::</b> string &#8594; Promise File
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.send">
+					<b>send</b>
+				</a> <b>::</b> File &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.download">
+					<b>download</b>
+				</a> <b>::</b> File &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.downloadFile">
+					<b>downloadFile</b>
+				</a> <b>::</b> string &#8594; Promise WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.sendFile">
+					<b>sendFile</b>
+				</a> <b>::</b> string &#8594; Promise WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.resolvePath">
+					<b>resolvePath</b>
+				</a> <b>::</b> string &#8594; string &#8594; string
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.browse">
+					<b>browse</b>
+				</a> <b>::</b> string &#8594; (string &#8594; string) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.browsePath">
+					<b>browsePath</b>
+				</a> <b>::</b> string &#8594; string &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Filters">Sugar.Combinators.Filters</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.test">
+					<b>test</b>
+				</a> <b>::</b> (HttpContext &#8594; boolean) &#8594; string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.method">
+					<b>method</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.GET">
+					<b>GET</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.PUT">
+					<b>PUT</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.DELETE">
+					<b>DELETE</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.POST">
+					<b>POST</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.HEAD">
+					<b>HEAD</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.path">
+					<b>path</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.pathStarts">
+					<b>pathStarts</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.extract">
+					<b>extract</b>
+				</a> <b>::</b> string &#8594; string &#8594; [int|number|string]
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.pathMatch">
+					<b>pathMatch</b>
+				</a> <b>::</b> string &#8594; (...int|number|string &#8594; WebPart) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Filters.func.choose">
+					<b>choose</b>
+				</a> <b>::</b> [WebPart] &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Intermediate">Sugar.Combinators.Intermediate</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Intermediate.func.CONTINUE">
+					<b>CONTINUE</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Intermediate.func.SWITCHING_PROTO">
+					<b>SWITCHING_PROTO</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Misc">Sugar.Combinators.Misc</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Misc.func.timeout">
+					<b>timeout</b>
+				</a> <b>::</b> int &#8594; WebPart &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Output">Sugar.Combinators.Output</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Output.func.response">
+					<b>response</b>
+				</a> <b>::</b> int &#8594; string | Buffer | File &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Output.func.setHeader">
+					<b>setHeader</b>
+				</a> <b>::</b> string &#8594; string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Output.func.text">
+					<b>text</b>
+				</a> <b>::</b> int &#8594; string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Output.func.mime">
+					<b>mime</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Redirection">Sugar.Combinators.Redirection</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Redirection.func.redirect">
+					<b>redirect</b>
+				</a> <b>::</b> URI &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Redirection.func.NOT_MODIFIED">
+					<b>NOT_MODIFIED</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Redirection.func.MOVED_PERMANENTLY">
+					<b>MOVED_PERMANENTLY</b>
+				</a> <b>::</b> URI &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Redirection.func.FOUND">
+					<b>FOUND</b>
+				</a> <b>::</b> URI &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.RequestErrors">Sugar.Combinators.RequestErrors</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.NOT_FOUND">
+					<b>NOT_FOUND</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.BAD_REQUEST">
+					<b>BAD_REQUEST</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.UNAUTHORIZED">
+					<b>UNAUTHORIZED</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.challenge">
+					<b>challenge</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.FORBIDDEN">
+					<b>FORBIDDEN</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.METHOD_NOT_ALLOWED">
+					<b>METHOD_NOT_ALLOWED</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.NOT_ACCEPTABLE">
+					<b>NOT_ACCEPTABLE</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.REQUEST_TIMEOUT">
+					<b>REQUEST_TIMEOUT</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.CONFLICT">
+					<b>CONFLICT</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.GONE">
+					<b>GONE</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.UNSUPPORTED_MEDIA_TYPE">
+					<b>UNSUPPORTED_MEDIA_TYPE</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.UNPROCESSABLE_ENTITY">
+					<b>UNPROCESSABLE_ENTITY</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.PRECONDITION_REQUIRED">
+					<b>PRECONDITION_REQUIRED</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.RequestErrors.func.TOO_MANY_REQUEST">
+					<b>TOO_MANY_REQUEST</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.ServerErrors">Sugar.Combinators.ServerErrors</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.ServerErrors.func.INTERNAL_ERROR">
+					<b>INTERNAL_ERROR</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.ServerErrors.func.NOT_IMPLEMENTED">
+					<b>NOT_IMPLEMENTED</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.ServerErrors.func.BAD_GATEWAY">
+					<b>BAD_GATEWAY</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.ServerErrors.func.SERVICE_UNAVAILABLE">
+					<b>SERVICE_UNAVAILABLE</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.ServerErrors.func.GATEWAY_TIMEOUT">
+					<b>GATEWAY_TIMEOUT</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.ServerErrors.func.INVALID_HTTP_VERSION">
+					<b>INVALID_HTTP_VERSION</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Successful">Sugar.Combinators.Successful</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Successful.func.OK">
+					<b>OK</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Successful.func.CREATED">
+					<b>CREATED</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Successful.func.ACCEPTED">
+					<b>ACCEPTED</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Successful.func.NO_CONTENT">
+					<b>NO_CONTENT</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Operators">Sugar.Operators</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Operators.func.arrow">
+					<b>arrow</b>
+				</a> <b>::</b> Monad m &#8658; (a &#8594; m b) &#8594; (b &#8594; m c) &#8594; a &#8594; m c
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Operators.func.or">
+					<b>or</b>
+				</a> <b>::</b> (a &#8594; Promise b) &#8594; (a &#8594; Promise b) &#8594; a &#8594; Promise b
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Server">Sugar.Server</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Server.func.formParsers">
+					<b>formParsers</b>
+				</a> <b>::</b> Map string (Buffer &#8594; Map string string)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.parseUrlEncodedForm">
+					<b>parseUrlEncodedForm</b>
+				</a> <b>::</b> Buffer &#8594; Map string string
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.getFormParser">
+					<b>getFormParser</b>
+				</a> <b>::</b> string &#8594; Buffer &#8594; Map string string
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.getRawForm">
+					<b>getRawForm</b>
+				</a> <b>::</b> NodeHttpRequest &#8594; Promise Buffer
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.parseRequest">
+					<b>parseRequest</b>
+				</a> <b>::</b> NodeHttpRequest &#8594; Promise HttpRequest
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.createContext">
+					<b>createContext</b>
+				</a> <b>::</b> Object &#8594; Object &#8594; Object &#8594; Promise HttpContext
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.addHeaders">
+					<b>addHeaders</b>
+				</a> <b>::</b> Object &#8594; Object &#8594; Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.httpsConfig">
+					<b>httpsConfig</b>
+				</a> <b>::</b> Object &#8594; Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.startWebServer">
+					<b>startWebServer</b>
+				</a> <b>::</b> Object &#8594; WebPart &#8594; HttpServer
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.defaultConfig">
+					<b>defaultConfig</b>
+				</a> <b>::</b> () &#8594; Object
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Util.Parsers">Sugar.Util.Parsers</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Util.Parsers.func.parseQuery">
+					<b>parseQuery</b>
+				</a> <b>::</b> string &#8594; Map string string
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Util.Parsers.func.parseUrl">
+					<b>parseUrl</b>
+				</a> <b>::</b> string &#8594; (string, Map string string)
+			</li>
+		
+			</ul>
+		</div>
+	
+			</div>
+			<div class="project-description">
+			<h2>Module Description</h2>
+			
+		<div class="module-description" id="doc.module.Sugar">
+			<div class="module-name">
+				Module: Sugar
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Sugar exports all the submodules used by the web application
+library.<br><br>A few useful functions to dynamically use WebPart combinators
+are provided in this module.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.func.WebPart">
+				<div class="function-name">
+					<b>WebPart</b> <b>::</b> HttpContext &#8594; Promise HttpContext
+				</div>
+				<div class="function-desc">
+					
+WebPart is the type of combinators used in
+Sugar.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.func.request">
+				<div class="function-name">
+					<b>request</b> <b>::</b> (HttpRequest &#8594; WebPart) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Allows application code to easily get access to
+an outstanding HttpRequest and return a WebPart
+based off of it.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.func.context">
+				<div class="function-name">
+					<b>context</b> <b>::</b> (HttpContext &#8594; WebPart) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+See request, but lets the application inspect
+the context instead.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.func.asyncRequest">
+				<div class="function-name">
+					<b>asyncRequest</b> <b>::</b> (HttpRequest &#8594; Promise WebPart) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Like request, but the function provided returns a promise
+for a WebPart instead of a WebPart. This allows the function
+to perform asynchronous handling of the HttpRequest (such as
+loading a file, making some network request, etc.), and only
+worry about calling a combinator to construct a WebPart, and
+not have to worry about piping the context in themselves.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.func.asyncContext">
+				<div class="function-name">
+					<b>asyncContext</b> <b>::</b> (HttpContext &#8594; Promise WebPart) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+See asyncRequest
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Authentication">
+			<div class="module-name">
+				Module: Sugar.Combinators.Authentication
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Provides combinators for performing
+basic HTTP authentication/authorization.<br><br>More advanced authentication and authorization
+schemes are left to the user to implement for
+their own applications or frameworks.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Authentication.func.parseAuthHeader">
+				<div class="function-name">
+					<b>parseAuthHeader</b> <b>::</b> string &#8594; (string, string, string)
+				</div>
+				<div class="function-desc">
+					
+Decodes the HTTP basic authorization header to extract
+the authorization type, username, and password.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Authentication.func.authenticateBasicAsync">
+				<div class="function-name">
+					<b>authenticateBasicAsync</b> <b>::</b> (string &#8594; string &#8594; Promise bool) &#8594; WebPart &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Returns a WebPart that will allow the user to access the provided WebPart
+if they provided credentials that pass the provided test. Otherwise,
+the user is provided an HTTP 401 Unauthorized response with a Basic
+authentication challenge.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Authentication.func.authenticateBasic">
+				<div class="function-name">
+					<b>authenticateBasic</b> <b>::</b> (string &#8594; string &#8594; bool) &#8594; WebPart &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+See authenticateBasicAsync. This is the same thing but for a validation
+function that is not asynchronous.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Files">
+			<div class="module-name">
+				Module: Sugar.Combinators.Files
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Functions for interacting with the filesystem
+and combinators for serving static files. These
+combinators can also be used with a custom file loading
+scheme (see below).<br><br>Files are represented as an object containing a suggested name
+for the file, a readable stream of the file's contents, and the
+size in bytes of the file. If you construct an object like this,
+it can be provided to the send or download combinators, depending
+on what you would like the user's browser to do with the file (note
+that the browser can choose to ignore the headers set by download
+and not actually download the file to the file system).
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.stat">
+				<div class="function-name">
+					<b>stat</b> <b>::</b> string &#8594; Promise Object Error
+				</div>
+				<div class="function-desc">
+					
+Stats a file on the local filesystem.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.openFile">
+				<div class="function-name">
+					<b>openFile</b> <b>::</b> string &#8594; Promise File
+				</div>
+				<div class="function-desc">
+					
+Opens a file on the local filesystem.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.send">
+				<div class="function-name">
+					<b>send</b> <b>::</b> File &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+WebPart that send the byte stream contained in the file object
+to the client. Sent in an HTTP 200 OK response.<br><br>The Content-Type header will be set as follows:<br><br>If the extension in file.name is in context.runtime.mime
+then the mime type will be used<br><br>Otherwise, 'application/octet-stream' will be used, which
+will cause most browsers to download the file
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.download">
+				<div class="function-name">
+					<b>download</b> <b>::</b> File &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Web Part that will cause a typical web browser to download
+a file with a specified file name. The file is sent in an HTTP 200 OK
+response. This is equivalent to send, but will attempt to force a browser
+to download the file and will suggest that the browser uses the file name
+provided by the file object.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.downloadFile">
+				<div class="function-name">
+					<b>downloadFile</b> <b>::</b> string &#8594; Promise WebPart
+				</div>
+				<div class="function-desc">
+					
+Loads a file from disk asynchronously and then maps it
+to a web part that will download the file.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.sendFile">
+				<div class="function-name">
+					<b>sendFile</b> <b>::</b> string &#8594; Promise WebPart
+				</div>
+				<div class="function-desc">
+					
+Loads a file from disk asynchronously and then maps it
+to a web part that will send the file.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.resolvePath">
+				<div class="function-name">
+					<b>resolvePath</b> <b>::</b> string &#8594; string &#8594; string
+				</div>
+				<div class="function-desc">
+					
+Resolves the file name provided relative to the root
+path provided. The resulting path is guaranteed to be
+a subpath of the rootPath.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.browse">
+				<div class="function-name">
+					<b>browse</b> <b>::</b> string &#8594; (string &#8594; string) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Returns a WebPart that allows the user to
+browse a portion of the file system. Takes
+the root path to browse at and a function to map
+paths. Handles path resolution.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.browsePath">
+				<div class="function-name">
+					<b>browsePath</b> <b>::</b> string &#8594; string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Browse relative to the rootPath on the file system, excluding
+startPath from the URL.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Filters">
+			<div class="module-name">
+				Module: Sugar.Combinators.Filters
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Combinators for filtering requests by
+the information contained within them.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.test">
+				<div class="function-name">
+					<b>test</b> <b>::</b> (HttpContext &#8594; boolean) &#8594; string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Useful to create combinators that test the current
+request context for some property to filter requests.<br><br>If the predicate returns true for a request, then the
+composition path on the returned combinator will be
+followed. Otherwise, the returned combinator will fail
+to match the request and signal an error.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.method">
+				<div class="function-name">
+					<b>method</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Create a WebPart that filters on an HTTP Method.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.GET">
+				<div class="function-name">
+					<b>GET</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+Filters out requests that are not HTTP GET
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.PUT">
+				<div class="function-name">
+					<b>PUT</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+Filters out requests that are not HTTP PUT
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.DELETE">
+				<div class="function-name">
+					<b>DELETE</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+Filters out requests that are not HTTP DELETE
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.POST">
+				<div class="function-name">
+					<b>POST</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+Filters out requests that are not HTTP POST
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.HEAD">
+				<div class="function-name">
+					<b>HEAD</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+Filters out requests that are not HTTP HEAD
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.path">
+				<div class="function-name">
+					<b>path</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Filters out requests whose URI does not match
+the provided URI.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.pathStarts">
+				<div class="function-name">
+					<b>pathStarts</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Filters out requests whose URI does not start
+with the provided URI.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.extract">
+				<div class="function-name">
+					<b>extract</b> <b>::</b> string &#8594; string &#8594; [int|number|string]
+				</div>
+				<div class="function-desc">
+					
+Extracts arguments from a text path that match
+parameters in a pattern path, in the style of
+scanf.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.pathMatch">
+				<div class="function-name">
+					<b>pathMatch</b> <b>::</b> string &#8594; (...int|number|string &#8594; WebPart) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Matches a pattern in the style of scanf in the request's
+path, extracts the arguments from the path, and passes them to
+the provided function to get the resulting web part.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Filters.func.choose">
+				<div class="function-name">
+					<b>choose</b> <b>::</b> [WebPart] &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Picks from a list of WebParts by choosing the first WebPart that
+accepts the HttpContext provided.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Intermediate">
+			<div class="module-name">
+				Module: Sugar.Combinators.Intermediate
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Combinators for serving HTTP 1xx status responses
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Intermediate.func.CONTINUE">
+				<div class="function-name">
+					<b>CONTINUE</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Intermediate.func.SWITCHING_PROTO">
+				<div class="function-name">
+					<b>SWITCHING_PROTO</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Misc">
+			<div class="module-name">
+				Module: Sugar.Combinators.Misc
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Miscellaneous combinators that don't really
+fit into any other specific module.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Misc.func.timeout">
+				<div class="function-name">
+					<b>timeout</b> <b>::</b> int &#8594; WebPart &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Creates a web part that will time out if the specified
+web part does not complete processing in the specified
+timespan (milliseconds).<br><br>Due to the way that Promises work, the provided WebPart
+processing will not be cancelled, but its result will be
+discarded and the returned WebPart is guaranteed to complete
+within the provided timespan.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Output">
+			<div class="module-name">
+				Module: Sugar.Combinators.Output
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Provides combinators for creating and
+modifying HTTP responses.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Output.func.response">
+				<div class="function-name">
+					<b>response</b> <b>::</b> int &#8594; string | Buffer | File &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+General purpose HTTP response web part that accepts the HTTP status
+code, and the response content. The response content can be in the
+form of a string, a byte buffer, or a File, which consists of a ReadableStream,
+file name, mime type, and file size.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Output.func.setHeader">
+				<div class="function-name">
+					<b>setHeader</b> <b>::</b> string &#8594; string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Web Part that sets an HTTP response header to a given
+value.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Output.func.text">
+				<div class="function-name">
+					<b>text</b> <b>::</b> int &#8594; string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Like response, but also sets the content type to
+text/plain.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Output.func.mime">
+				<div class="function-name">
+					<b>mime</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Web Part that sets the
+Content-Type header for the HTTP response
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Redirection">
+			<div class="module-name">
+				Module: Sugar.Combinators.Redirection
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Combinators for HTTP 3xx status responses.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Redirection.func.redirect">
+				<div class="function-name">
+					<b>redirect</b> <b>::</b> URI &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Temporarily moved response with body for browsers
+that do not perform automatic redirection.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Redirection.func.NOT_MODIFIED">
+				<div class="function-name">
+					<b>NOT_MODIFIED</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP 304 Not Modified Web Part response. The
+browser should load the requested resource from
+its cache.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Redirection.func.MOVED_PERMANENTLY">
+				<div class="function-name">
+					<b>MOVED_PERMANENTLY</b> <b>::</b> URI &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP 301 Moved Permanently response that
+indicates the resource has been moved
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Redirection.func.FOUND">
+				<div class="function-name">
+					<b>FOUND</b> <b>::</b> URI &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP 302 Moved Temporarily response that
+indicates the resource can temporarily be
+found at the provided uri.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.RequestErrors">
+			<div class="module-name">
+				Module: Sugar.Combinators.RequestErrors
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Combinators for serving 4xx status
+HTTP responses.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.NOT_FOUND">
+				<div class="function-name">
+					<b>NOT_FOUND</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 404 response with text/plain content type.<br><br>Used when a resource cannot be located.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.BAD_REQUEST">
+				<div class="function-name">
+					<b>BAD_REQUEST</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 400 response with text/plain content type.<br><br>Used when a request is malformed.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.UNAUTHORIZED">
+				<div class="function-name">
+					<b>UNAUTHORIZED</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 401 response requesting basic authentication
+for a resource from a client.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.challenge">
+				<div class="function-name">
+					<b>challenge</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 401 Basic Challenge.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.FORBIDDEN">
+				<div class="function-name">
+					<b>FORBIDDEN</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 403 response with message to client.<br><br>Used when access to a resource is forbidden to the
+client and authorization will not gain them access.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.METHOD_NOT_ALLOWED">
+				<div class="function-name">
+					<b>METHOD_NOT_ALLOWED</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 405 response with message to client.<br><br>Used when an HTTP method is not allowed for some
+URI.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.NOT_ACCEPTABLE">
+				<div class="function-name">
+					<b>NOT_ACCEPTABLE</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 406 response with message to client.<br><br>The response is of a type that the client does
+not accept, but the server otherwise processed
+the request properly.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.REQUEST_TIMEOUT">
+				<div class="function-name">
+					<b>REQUEST_TIMEOUT</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 408 response with message to client.<br><br>Used when the servers determines that processing
+a request is taking to long and decides to terminate
+it.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.CONFLICT">
+				<div class="function-name">
+					<b>CONFLICT</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 409 response with message to client.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.GONE">
+				<div class="function-name">
+					<b>GONE</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 410 response with message to client.<br><br>Used when a resource cannot be located, but we know
+that it previously existed.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.UNSUPPORTED_MEDIA_TYPE">
+				<div class="function-name">
+					<b>UNSUPPORTED_MEDIA_TYPE</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 415 response with message to client.<br><br>Used when the server does not recognize the content
+type of the request body.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.UNPROCESSABLE_ENTITY">
+				<div class="function-name">
+					<b>UNPROCESSABLE_ENTITY</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 422 response with message to client.<br><br>Used when the server can parse the request, but cannot
+process it (it is semantically meaningless, but syntactically
+meaningful).
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.PRECONDITION_REQUIRED">
+				<div class="function-name">
+					<b>PRECONDITION_REQUIRED</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 428 response with message to client.<br><br>Sent when the server requires the request to be conditional.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.RequestErrors.func.TOO_MANY_REQUEST">
+				<div class="function-name">
+					<b>TOO_MANY_REQUEST</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 429 response with message to client.<br><br>Used with rate limiting schemes to prevent clients
+from sending too many requests in a short period of
+time.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.ServerErrors">
+			<div class="module-name">
+				Module: Sugar.Combinators.ServerErrors
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Combinators for serving 5xx status HTTP responses
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.ServerErrors.func.INTERNAL_ERROR">
+				<div class="function-name">
+					<b>INTERNAL_ERROR</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP 500 Status Internal Service Error
+response. Used when an unexpected error
+occurs and no more information exists to
+give a better error.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.ServerErrors.func.NOT_IMPLEMENTED">
+				<div class="function-name">
+					<b>NOT_IMPLEMENTED</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP 501 Not Implemented Error. The
+requested service is not yet available,
+but is likely to be implemented in the
+future.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.ServerErrors.func.BAD_GATEWAY">
+				<div class="function-name">
+					<b>BAD_GATEWAY</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP 502 Bad Gateway. An upstream server
+returned an invalid response when this
+server was acting as a gateway.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.ServerErrors.func.SERVICE_UNAVAILABLE">
+				<div class="function-name">
+					<b>SERVICE_UNAVAILABLE</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP 503 Service Unavailable. The server is
+not currently available.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.ServerErrors.func.GATEWAY_TIMEOUT">
+				<div class="function-name">
+					<b>GATEWAY_TIMEOUT</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP 504 Gateway Timeout. An upstream server
+did not respond in a timely manner when this
+server was acting as a gateway.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.ServerErrors.func.INVALID_HTTP_VERSION">
+				<div class="function-name">
+					<b>INVALID_HTTP_VERSION</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+505 HTTP Version Not Supported. The server
+does not support the version of the HTTP
+protocol used in the request.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Successful">
+			<div class="module-name">
+				Module: Sugar.Combinators.Successful
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Combinators for serving HTTP 2xx status responses.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Successful.func.OK">
+				<div class="function-name">
+					<b>OK</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 200 response with text/plain content type
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Successful.func.CREATED">
+				<div class="function-name">
+					<b>CREATED</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 201 response
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Successful.func.ACCEPTED">
+				<div class="function-name">
+					<b>ACCEPTED</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 202 response
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Successful.func.NO_CONTENT">
+				<div class="function-name">
+					<b>NO_CONTENT</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+HTTP status 204 response
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Operators">
+			<div class="module-name">
+				Module: Sugar.Operators
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Defines operators used by Sugar. These are
+special functions attached to the Function prototype
+allowing the composition of WebPart combinators in different
+ways.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Operators.func.arrow">
+				<div class="function-name">
+					<b>arrow</b> <b>::</b> Monad m &#8658; (a &#8594; m b) &#8594; (b &#8594; m c) &#8594; a &#8594; m c
+				</div>
+				<div class="function-desc">
+					Kleisi Composition of monadic
+functions
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Operators.func.or">
+				<div class="function-name">
+					<b>or</b> <b>::</b> (a &#8594; Promise b) &#8594; (a &#8594; Promise b) &#8594; a &#8594; Promise b
+				</div>
+				<div class="function-desc">
+					
+Returns a new function that will try the first
+function, then try the second function if the
+first one fails.<br><br>This is essentially an alternative instance for promise returning
+functions.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Server">
+			<div class="module-name">
+				Module: Sugar.Server
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			This module implements the HTTP/HTTPS
+server functionality for Sugar.<br><br>This module exports two functions:
+startWebServer and defaultConfig
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.formParsers">
+				<div class="function-name">
+					<b>formParsers</b> <b>::</b> Map string (Buffer &#8594; Map string string)
+				</div>
+				<div class="function-desc">
+					
+Map content types to functions that will
+parse the request body.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.parseUrlEncodedForm">
+				<div class="function-name">
+					<b>parseUrlEncodedForm</b> <b>::</b> Buffer &#8594; Map string string
+				</div>
+				<div class="function-desc">
+					
+Parses a form that is urlencoded by using
+the URI query string parser.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.getFormParser">
+				<div class="function-name">
+					<b>getFormParser</b> <b>::</b> string &#8594; Buffer &#8594; Map string string
+				</div>
+				<div class="function-desc">
+					
+Gets a form parser for a content type. If no
+parser is defined for the content type, then a parser
+that returns an empty form is returned.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.getRawForm">
+				<div class="function-name">
+					<b>getRawForm</b> <b>::</b> NodeHttpRequest &#8594; Promise Buffer
+				</div>
+				<div class="function-desc">
+					
+Extracts the data from the Node HTTP Server Request.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.parseRequest">
+				<div class="function-name">
+					<b>parseRequest</b> <b>::</b> NodeHttpRequest &#8594; Promise HttpRequest
+				</div>
+				<div class="function-desc">
+					
+Performs further processing on the incoming node HTTP Request
+before mapping it to a Sugar HTTP Request and returning it in
+a Promise.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.createContext">
+				<div class="function-name">
+					<b>createContext</b> <b>::</b> Object &#8594; Object &#8594; Object &#8594; Promise HttpContext
+				</div>
+				<div class="function-desc">
+					
+Extracts and further parses the request data from the
+node HTTP server to create a Sugar HttpContext
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.addHeaders">
+				<div class="function-name">
+					<b>addHeaders</b> <b>::</b> Object &#8594; Object &#8594; Object
+				</div>
+				<div class="function-desc">
+					
+Adds additional headers to the headers
+the server responds with.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.httpsConfig">
+				<div class="function-name">
+					<b>httpsConfig</b> <b>::</b> Object &#8594; Object
+				</div>
+				<div class="function-desc">
+					
+Loads the SSL private key and signed certificate
+pair from disk, given the configuration object
+for startWebServer.<br><br>The returned object can be passed to the nodejs
+https server constructor.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.startWebServer">
+				<div class="function-name">
+					<b>startWebServer</b> <b>::</b> Object &#8594; WebPart &#8594; HttpServer
+				</div>
+				<div class="function-desc">
+					
+Runs a web server that processes each request
+through the specified Web Part.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.defaultConfig">
+				<div class="function-name">
+					<b>defaultConfig</b> <b>::</b> () &#8594; Object
+				</div>
+				<div class="function-desc">
+					
+A constant function that returns the default Sugar
+application configuration object. The returned object
+can be modified before being passed to startWebServer to
+change properties of the web server.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Util.Parsers">
+			<div class="module-name">
+				Module: Sugar.Util.Parsers
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			This module provides functions to parse
+incoming request data.<br><br>Node's http module already does most of the parsing of the HTTP request,
+but these functions allow us to do some of the additional
+parsing that allows providing the application developer with request
+parameters (form data, query string data, etc.).
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Util.Parsers.func.parseQuery">
+				<div class="function-name">
+					<b>parseQuery</b> <b>::</b> string &#8594; Map string string
+				</div>
+				<div class="function-desc">
+					
+Takes a URI Encoded form and parses it into
+a map of key-value string pairs (actually an object).
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Util.Parsers.func.parseUrl">
+				<div class="function-name">
+					<b>parseUrl</b> <b>::</b> string &#8594; (string, Map string string)
+				</div>
+				<div class="function-desc">
+					
+Takes a URI and splits it into the URI and query string
+components, and parses the query string.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+			</div>
+
+			<div class="top-scroll">
+					<a href="#top">&#8593;</a>
+			</div>
+
+			<div class="footer">
+			This documentation was generated by <code>hmdoc</code> on <code>6/21/2017, 6:03:40 PM</code>
+			</div>
+		</body>
+	</html>
+	

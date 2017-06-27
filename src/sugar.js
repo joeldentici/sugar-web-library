@@ -12,7 +12,7 @@
 
 
 /**
- *	WebPart :: HttpContext -> Promise HttpContext
+ *	WebPart :: HttpContext -> Async e HttpContext
  *
  *	WebPart is the type of combinators used in
  *	Sugar.
@@ -80,7 +80,7 @@ exports.context = function(fn) {
 }
 
 /**
- *	asyncRequest :: (HttpRequest -> Promise WebPart) -> WebPart
+ *	asyncRequest :: (HttpRequest -> Async e WebPart) -> WebPart
  *
  *	Like request, but the function provided returns a promise
  *	for a WebPart instead of a WebPart. This allows the function
@@ -91,18 +91,18 @@ exports.context = function(fn) {
  */
 exports.asyncRequest = function(fn) {
 	return function(context) {
-		return fn(context.request).then(f => f(context));
+		return fn(context.request).bind(f => f(context));
 	}
 }
 
 /**
- *	asyncContext :: (HttpContext -> Promise WebPart) -> WebPart
+ *	asyncContext :: (HttpContext -> Async WebPart) -> WebPart
  *
  *	See asyncRequest
  */
 exports.asyncContext = function(fn) {
 	return function(context) {
-		return fn(context).then(f => f(context));
+		return fn(context).bind(f => f(context));
 	}
 }
 

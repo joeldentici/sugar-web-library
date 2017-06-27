@@ -1,9 +1,10 @@
 const {setHeader, response, mime} = require('./output.js');
 const fs = require('fs');
 const path = require('path');
-const {promisfy} = require('js-helpers');
 const {asyncRequest} = require('../sugar.js');
 const {NOT_FOUND} = require('./requesterrors.js');
+
+const Async = require('monadic-js').Async;
 
 /**
  *	Sugar.Combinators.Files
@@ -25,30 +26,30 @@ const {NOT_FOUND} = require('./requesterrors.js');
  */
 
 /**
- *	stat :: string -> Promise Object Error
+ *	stat :: string -> Async Error Object
  *
  *	Stats a file on the local filesystem.
  */
-const stat = promisfy(fs.stat);
+const stat = Async.wrap(fs.stat);
 
 /**
- *	openFile :: string -> Promise File
+ *	openFile :: string -> Async Error File
  *
  *	Opens a file on the local filesystem.
  */
 const openFile = exports.openFile = function(name) {
 	const fileName = name.substring(name.lastIndexOf(path.sep) + 1);
 	return stat(name)
-		.then(stats => {
+		.bind(stats => {
 			if (stats.isFile()) {
-				return {
+				return Async.unit({
 					name: fileName.replace(/\|\\\//g, '-'),
 					stream: fs.createReadStream(name),
 					size: stats.size,
-				}
+				});
 			}
 			else {
-				return Promise.reject(new Error("Not a file"));
+				return Async.fail(new Error("Not a file"));
 			}
 		});
 }
@@ -97,26 +98,37 @@ const download = exports.download = function(file) {
 
 
 /**
- *	downloadFile :: string -> Promise WebPart
+ *	doFile :: (File -> WebPart) -> string -> Async () WebPart
+ *
+ *	Reads a file from disk, then maps it to the appropriate
+ *	web part by applying the provided action.
+ *
+ *	The resulting WebPart will return an HTTP 404 Not Found
+ *	error containing the message of any error that occurs
+ *	while loading the file.
+ */
+function doFile(action) {
+	return function(filePath) {
+		return Async.try(openFile(filePath).map(action))
+			    	.catch(e => Async.unit(NOT_FOUND(
+			    		"The requested file could not be found: " + e.toString())));		
+	}
+}
+
+/**
+ *	downloadFile :: string -> Async () WebPart
  *
  *	Loads a file from disk asynchronously and then maps it
  *	to a web part that will download the file.
  */
-const downloadFile = exports.downloadFile = function(filePath) {
-	return openFile(filePath)
-		.then(download, e => NOT_FOUND("The requested file could not be found: " + e.toString()));
-}
-
+const downloadFile = exports.downloadFile = doFile(download);
 /**
- *	sendFile :: string -> Promise WebPart
+ *	sendFile :: string -> Async () WebPart
  *
  *	Loads a file from disk asynchronously and then maps it
  *	to a web part that will send the file.
  */
-const sendFile = exports.sendFile = function(filePath) {
-	return openFile(filePath)
-		.then(send, e => NOT_FOUND("The requested file could not be found: " + e.toString()));
-}
+const sendFile = exports.sendFile = doFile(send);
 
 /**
  *	resolvePath :: string -> string -> string

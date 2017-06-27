@@ -1,4 +1,5 @@
 const {challenge} = require('./requesterrors.js');
+const Async = require('monadic-js').Async;
 
 /**
  *	Sugar.Combinators.Authentication
@@ -32,7 +33,7 @@ function parseAuthHeader(header) {
 }
 
 /**
- *	authenticateBasicAsync :: (string -> string -> Promise bool) -> WebPart -> WebPart
+ *	authenticateBasicAsync :: (string -> string -> Async () bool) -> WebPart -> WebPart
  *
  *	Returns a WebPart that will allow the user to access the provided WebPart
  *	if they provided credentials that pass the provided test. Otherwise,
@@ -47,7 +48,7 @@ const authenticateBasicAsync = exports.authenticateBasicAsync = function(test, p
 			const [type, user, pwd] = parseAuthHeader(authHeader);
 			if (type === 'basic') {
 				return test(user, pwd)
-					.then(b => b ? part(context) : challenge(context));
+					.bind(b => b ? part(context) : challenge(context));
 			}
 			else {
 				return challenge(context);
@@ -67,5 +68,5 @@ const authenticateBasicAsync = exports.authenticateBasicAsync = function(test, p
  */
 exports.authenticateBasic = function(test, part) {
 	return authenticateBasicAsync(
-		(u,p) => Promise.resolve(test(u,p)), part);
+		(u,p) => Async.unit(test(u,p)), part);
 }

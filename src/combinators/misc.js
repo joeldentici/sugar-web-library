@@ -1,5 +1,6 @@
 const {REQUEST_TIMEOUT} = require('./requesterrors.js');
-const {waitFor: delayFor} = require('js-helpers');
+const Async = require('monadic-js').Async;
+
 /**
  *	Sugar.Combinators.Misc
  *	written by Joel Dentici
@@ -24,8 +25,9 @@ const {waitFor: delayFor} = require('js-helpers');
 exports.timeout = function(timespan, part) {
 	return function(context) {
 		const run = part(context);
-		const timed = delayFor(timespan).then(_ => Promise.reject());
-		return Promise.race([run,timed])
-			.catch(_ => REQUEST_TIMEOUT('Request Timeout')(context));
+		const timed = Async.sleep(timespan).map(_ =>
+			REQUEST_TIMEOUT('Request Timeout')(context));
+
+		return Async.first(run, timed);
 	}
 }

@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 const {parseUrl, parseQuery} = require('../util/parsers.js');
 const fs = require('fs');
+const Async = require('monadic-js').Async;
 /**
  *	Sugar.Server
  *	written by Joel Dentici
@@ -169,7 +170,7 @@ function startWebServer(config, app) {
 	function handler(req, res) {
 		//create context for the request
 		createContext(req, res, config)
-			.then(app) //then run it through the application
+			.then(x => Async.run(app(x))) //then run it through the application
 			.then(x => {
 				//write the response headers and status
 				res.writeHead(x.response.status, 

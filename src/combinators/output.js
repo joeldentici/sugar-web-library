@@ -1,3 +1,5 @@
+const Async = require('monadic-js').Async;
+
 /**
  *	Sugar.Combinators.Output
  *	written by Joel Dentici
@@ -30,7 +32,7 @@ const response = exports.response = function(status) {
 					headers
 				}
 			};
-			return Promise.resolve(newContext);
+			return Async.unit(newContext);
 		}
 	}
 }
@@ -55,7 +57,7 @@ const setHeader = exports.setHeader = function(header) {
 				}
 			};
 
-			return Promise.resolve(newContext);
+			return Async.unit(newContext);
 
 		}
 	}

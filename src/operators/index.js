@@ -9,8 +9,6 @@
  *	ways.
  */
 
-//this allows us to define Kleisi composition more generically
-Promise.prototype.bind = Promise.prototype.then;
 
 /**
  *	arrow :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
@@ -23,21 +21,21 @@ function arrow(a, b) {
 	}
 }
 
+const Async = require('monadic-js').Async;
+
 /**
- *	or :: (a -> Promise b) -> (a -> Promise b) -> a -> Promise b
+ *	or :: (a -> Async e b) -> (a -> Async e b) -> a -> Async e b
  *
  *	Returns a new function that will try the first
  *	function, then try the second function if the
  *	first one fails.
  *
- *	This is essentially an alternative instance for promise returning
- *	functions.
+ *	This is essentially an alternative instance for Async
+ *	combinators.
  */
 function or(a, b) {
 	return function(x) {
-		return a(x)
-			.then(x => x,
-				  e => b(x));
+		return Async.try(a(x)).catch(e => b(x));
 	}
 }
 

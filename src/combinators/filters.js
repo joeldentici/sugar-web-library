@@ -1,5 +1,6 @@
 const {zip} = require('js-helpers');
 const {response} = require('./output.js');
+const Async = require('monadic-js').Async;
 
 /**
  *	Sugar.Combinators.Filters
@@ -25,10 +26,10 @@ const {response} = require('./output.js');
 function test(pred, err) {
 	return function(context) {
 		if (pred(context)) {
-			return Promise.resolve(context);
+			return Async.unit(context);
 		}
 		else {
-			return Promise.reject(err);
+			return Async.fail(err);
 		}
 	}
 }
@@ -157,7 +158,7 @@ exports.pathMatch = function(pattern, mapper) {
 	return function(context) {
 		const values = extract(pattern, context.request.url);
 		if (values === null)
-			return Promise.reject("Path does not match");
+			return Async.fail("Path does not match");
 		else
 			return mapper.apply(null, values)(context);
 	}
@@ -170,13 +171,13 @@ exports.pathMatch = function(pattern, mapper) {
  *	accepts the HttpContext provided.
  */
 exports.choose = function(...options) {
+	//TODO: Should we implement this in terms of Function.prototype.or?
 	function tryOptions(context, options) {
 		if (options.length)
-			return options[0](context).then(
-				x => x,
-				x => tryOptions(context, options.slice(1)));
+			return Async.try(options[0](context))
+						.catch(e => tryOptions(context, options.slice(1)));
 		else
-			return Promise.reject("No choose option matched");
+			return Async.fail("No choose option matched");
 	}
 
 	return function(context) {

@@ -1,7 +1,7 @@
 
 	<html>
 		<head>
-			<title>Sugar Documentation</title>
+			<title>Sugar Web Server Documentation</title>
 			<style>
 				.module-header, .module-description {
 					background-color: #EFEFEF;
@@ -135,7 +135,7 @@
 		</head>
 		<body>
 			<div class="project-header" id="top">
-			<h1>Sugar Documentation</h1>
+			<h1>Sugar Web Server Documentation</h1>
 			</div>
 			<div class="project-synopsis">
 			<h2>Module List</h2>
@@ -149,7 +149,7 @@
 			<li>
 				<a href="#doc.module.Sugar.func.WebPart">
 					<b>WebPart</b>
-				</a> <b>::</b> HttpContext &#8594; Promise HttpContext
+				</a> <b>::</b> HttpContext &#8594; Async e HttpContext
 			</li>
 		
 			<li>
@@ -167,13 +167,13 @@
 			<li>
 				<a href="#doc.module.Sugar.func.asyncRequest">
 					<b>asyncRequest</b>
-				</a> <b>::</b> (HttpRequest &#8594; Promise WebPart) &#8594; WebPart
+				</a> <b>::</b> (HttpRequest &#8594; Async e WebPart) &#8594; WebPart
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.func.asyncContext">
 					<b>asyncContext</b>
-				</a> <b>::</b> (HttpContext &#8594; Promise WebPart) &#8594; WebPart
+				</a> <b>::</b> (HttpContext &#8594; Async WebPart) &#8594; WebPart
 			</li>
 		
 			</ul>
@@ -194,7 +194,7 @@
 			<li>
 				<a href="#doc.module.Sugar.Combinators.Authentication.func.authenticateBasicAsync">
 					<b>authenticateBasicAsync</b>
-				</a> <b>::</b> (string &#8594; string &#8594; Promise bool) &#8594; WebPart &#8594; WebPart
+				</a> <b>::</b> (string &#8594; string &#8594; Async () bool) &#8594; WebPart &#8594; WebPart
 			</li>
 		
 			<li>
@@ -215,13 +215,13 @@
 			<li>
 				<a href="#doc.module.Sugar.Combinators.Files.func.stat">
 					<b>stat</b>
-				</a> <b>::</b> string &#8594; Promise Object Error
+				</a> <b>::</b> string &#8594; Async Error Object
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Combinators.Files.func.openFile">
 					<b>openFile</b>
-				</a> <b>::</b> string &#8594; Promise File
+				</a> <b>::</b> string &#8594; Async Error File
 			</li>
 		
 			<li>
@@ -237,15 +237,21 @@
 			</li>
 		
 			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.doFile">
+					<b>doFile</b>
+				</a> <b>::</b> (File &#8594; WebPart) &#8594; string &#8594; Async () WebPart
+			</li>
+		
+			<li>
 				<a href="#doc.module.Sugar.Combinators.Files.func.downloadFile">
 					<b>downloadFile</b>
-				</a> <b>::</b> string &#8594; Promise WebPart
+				</a> <b>::</b> string &#8594; Async () WebPart
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Combinators.Files.func.sendFile">
 					<b>sendFile</b>
-				</a> <b>::</b> string &#8594; Promise WebPart
+				</a> <b>::</b> string &#8594; Async () WebPart
 			</li>
 		
 			<li>
@@ -638,7 +644,7 @@
 			<li>
 				<a href="#doc.module.Sugar.Operators.func.or">
 					<b>or</b>
-				</a> <b>::</b> (a &#8594; Promise b) &#8594; (a &#8594; Promise b) &#8594; a &#8594; Promise b
+				</a> <b>::</b> (a &#8594; Async e b) &#8594; (a &#8594; Async e b) &#8594; a &#8594; Async e b
 			</li>
 		
 			</ul>
@@ -758,7 +764,7 @@ are provided in this module.
 			<div class="function-description"
 			id="doc.module.Sugar.func.WebPart">
 				<div class="function-name">
-					<b>WebPart</b> <b>::</b> HttpContext &#8594; Promise HttpContext
+					<b>WebPart</b> <b>::</b> HttpContext &#8594; Async e HttpContext
 				</div>
 				<div class="function-desc">
 					
@@ -795,7 +801,7 @@ the context instead.
 			<div class="function-description"
 			id="doc.module.Sugar.func.asyncRequest">
 				<div class="function-name">
-					<b>asyncRequest</b> <b>::</b> (HttpRequest &#8594; Promise WebPart) &#8594; WebPart
+					<b>asyncRequest</b> <b>::</b> (HttpRequest &#8594; Async e WebPart) &#8594; WebPart
 				</div>
 				<div class="function-desc">
 					
@@ -811,7 +817,7 @@ not have to worry about piping the context in themselves.
 			<div class="function-description"
 			id="doc.module.Sugar.func.asyncContext">
 				<div class="function-name">
-					<b>asyncContext</b> <b>::</b> (HttpContext &#8594; Promise WebPart) &#8594; WebPart
+					<b>asyncContext</b> <b>::</b> (HttpContext &#8594; Async WebPart) &#8594; WebPart
 				</div>
 				<div class="function-desc">
 					
@@ -855,7 +861,7 @@ the authorization type, username, and password.
 			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Authentication.func.authenticateBasicAsync">
 				<div class="function-name">
-					<b>authenticateBasicAsync</b> <b>::</b> (string &#8594; string &#8594; Promise bool) &#8594; WebPart &#8594; WebPart
+					<b>authenticateBasicAsync</b> <b>::</b> (string &#8594; string &#8594; Async () bool) &#8594; WebPart &#8594; WebPart
 				</div>
 				<div class="function-desc">
 					
@@ -908,7 +914,7 @@ and not actually download the file to the file system).
 			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Files.func.stat">
 				<div class="function-name">
-					<b>stat</b> <b>::</b> string &#8594; Promise Object Error
+					<b>stat</b> <b>::</b> string &#8594; Async Error Object
 				</div>
 				<div class="function-desc">
 					
@@ -919,7 +925,7 @@ Stats a file on the local filesystem.
 			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Files.func.openFile">
 				<div class="function-name">
-					<b>openFile</b> <b>::</b> string &#8594; Promise File
+					<b>openFile</b> <b>::</b> string &#8594; Async Error File
 				</div>
 				<div class="function-desc">
 					
@@ -957,9 +963,23 @@ provided by the file object.
 			</div>
 		
 			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.doFile">
+				<div class="function-name">
+					<b>doFile</b> <b>::</b> (File &#8594; WebPart) &#8594; string &#8594; Async () WebPart
+				</div>
+				<div class="function-desc">
+					
+Reads a file from disk, then maps it to the appropriate
+web part by applying the provided action.<br><br>The resulting WebPart will return an HTTP 404 Not Found
+error containing the message of any error that occurs
+while loading the file.
+				</div>
+			</div>
+		
+			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Files.func.downloadFile">
 				<div class="function-name">
-					<b>downloadFile</b> <b>::</b> string &#8594; Promise WebPart
+					<b>downloadFile</b> <b>::</b> string &#8594; Async () WebPart
 				</div>
 				<div class="function-desc">
 					
@@ -971,7 +991,7 @@ to a web part that will download the file.
 			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Files.func.sendFile">
 				<div class="function-name">
-					<b>sendFile</b> <b>::</b> string &#8594; Promise WebPart
+					<b>sendFile</b> <b>::</b> string &#8594; Async () WebPart
 				</div>
 				<div class="function-desc">
 					
@@ -1771,14 +1791,14 @@ functions
 			<div class="function-description"
 			id="doc.module.Sugar.Operators.func.or">
 				<div class="function-name">
-					<b>or</b> <b>::</b> (a &#8594; Promise b) &#8594; (a &#8594; Promise b) &#8594; a &#8594; Promise b
+					<b>or</b> <b>::</b> (a &#8594; Async e b) &#8594; (a &#8594; Async e b) &#8594; a &#8594; Async e b
 				</div>
 				<div class="function-desc">
 					
 Returns a new function that will try the first
 function, then try the second function if the
-first one fails.<br><br>This is essentially an alternative instance for promise returning
-functions.
+first one fails.<br><br>This is essentially an alternative instance for Async
+combinators.
 				</div>
 			</div>
 		
@@ -1983,7 +2003,7 @@ components, and parses the query string.
 			</div>
 
 			<div class="footer">
-			This documentation was generated by <code>hmdoc</code> on <code>6/21/2017, 6:03:40 PM</code>
+			This documentation was generated by <code>hmdoc</code> on <code>6/27/2017, 11:37:42 PM</code>
 			</div>
 		</body>
 	</html>

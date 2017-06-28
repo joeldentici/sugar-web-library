@@ -72,7 +72,7 @@ function displaySize(size, decSig) {
  *
  *	Creates an HTML directory listing from a directory.
  */
-function directoryListing(dirPath, urlPath) {
+function directoryListing(dirPath, urlPath, range) {
 	function toHTML(files) {
 		const getPath = (file) => path.join(urlPath, file);
 
@@ -146,12 +146,29 @@ function directoryListing(dirPath, urlPath) {
 		.bind(fileNames => mapM(Async, readStats, fileNames))
 		.map(files => files.filter(([n,s]) => 
 			s.isFile() || s.isDirectory()))
-		.map(toHTML)
-		.map(listing => createFile(
-			'directory.html',
-			toStream(Buffer.from(listing)),
-			Buffer.byteLength(listing)
-		));
+		.bind(files => {
+			//if we have an index file in the directory, return it
+			const indexes = files.filter(
+					([n,s]) => n.match(/^index/) !== null);
+			if (indexes.length > 0) {
+				const [name,stats] = indexes[0];
+				return openFile({
+					name: path.join(dirPath, name),
+					urlPath,
+					range
+				});
+			}
+			//otherwise create and return a directory listing
+			else {
+				return Async.unit(files)
+					.map(toHTML)
+					.map(listing => createFile(
+						'directory.html',
+						toStream(Buffer.from(listing)),
+						Buffer.byteLength(listing)
+					));
+			}
+		});
 }
 
 /**
@@ -243,7 +260,7 @@ const openFile = exports.openFile = function({name, urlPath, range}) {
 				return Async.unit(loadFile(stats));
 			}
 			else if (stats.isDirectory()) {
-				return directoryListing(name, urlPath);
+				return directoryListing(name, urlPath, range);
 			}
 			else {
 				return Async.fail(new Error("Not a file or directory"));
@@ -319,16 +336,10 @@ const download = exports.download = function(file) {
  *
  *	Reads a file from disk, then maps it to the appropriate
  *	web part by applying the provided action.
- *
- *	The resulting WebPart will return an HTTP 404 Not Found
- *	error containing the message of any error that occurs
- *	while loading the file.
  */
 function doFile(action) {
 	return function(fileOptions) {
-		return Async.try(openFile(fileOptions).map(action))
-			    	.catch(e => Async.unit(NOT_FOUND(
-			    		"The requested file could not be found: " + e.toString())));		
+		return openFile(fileOptions).map(action);		
 	}
 }
 

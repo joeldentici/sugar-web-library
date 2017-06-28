@@ -119,6 +119,7 @@ exports.Combinators = {
 	RequestErrors: require('./combinators/requesterrors.js'),
 	ServerErrors: require('./combinators/servererrors.js'),
 	Successful: require('./combinators/successful.js'),
+	Compression: require('./combinators/compression.js'),
 };
 exports.Util = {
 	Parsers: require('./util/parsers.js'),

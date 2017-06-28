@@ -3,10 +3,9 @@ const https = require('https');
 const {parseUrl, parseQuery} = require('../util/parsers.js');
 const fs = require('fs');
 const Async = require('monadic-js').Async;
-const {compress} = require('../combinators/output');
+const {compressStream} = require('../combinators/compression.js');
 const {request} = require('../sugar.js');
-const zlib = require('zlib');
-const PassThrough = require('stream').PassThrough;
+const {setHeader} = require('../combinators/output.js');
 
 /**
  *	Sugar.Server
@@ -114,25 +113,11 @@ function createContext(req, res, config) {
 				content: '',
 			},
 			runtime: {
+				https: config.httpsKey ? true : false,
+				port: config.port,
 				mime: config.mime,
 			}
 		}));
-}
-
-/**
- *	addHeaders :: Object -> Object -> Object
- *
- *	Adds additional headers to the headers
- *	the server responds with.
- */
-function addHeaders(config) {
-	return function(headers) {
-		const defaultHeaders = {
-			Server: `Sugar (${config.host})`
-		};
-
-		return Object.assign({}, defaultHeaders, headers);
-	}
 }
 
 /**
@@ -152,13 +137,22 @@ function httpsConfig(config) {
 	}
 
 	if (config.caCert) {
-		httpsConfig = Object.assign(httpsConfig, {
-			ca: fs.readFileSync(config.caCert),
-			requestCert: true
-		});
+		httpsConfig.ca = fs.readFileSync(config.caCert);
+		httpsConfig.requestCert = true;
 	}
 
 	return httpsConfig;
+}
+
+/**
+ *	addServer :: HttpRequest -> WebPart
+ *
+ *	Adds the server response header.
+ */
+function addServer(request) {
+	const host = request.headers.host || 'localhost';
+
+	return setHeader('Server')(`Sugar (${host})`);
 }
 
 /**
@@ -168,38 +162,8 @@ function httpsConfig(config) {
  *	through the specified Web Part.
  */
 function startWebServer(config, app) {
-	/* add compression to the app */
-	const compressionStreams = {
-		deflate: zlib.createDeflate,
-		gzip: zlib.createGzip,
-		'none': () => new PassThrough(),
-	};
-
-	const supportedCompression = new Set(Object.keys(compressionStreams));
-
-	//TODO: Make the accept-encoding parse conformant
-	function addCompression(request) {
-		if (request.headers['accept-encoding']) {
-			const algs = request.headers['accept-encoding']
-				.split(',')
-				.map(x => x.trim());
-			const usableAlgs = algs.filter(x => supportedCompression.has(x));
-			if (usableAlgs.length)
-				return compress(usableAlgs[0]);
-		}
-
-		return Async.unit;
-	}
-
-	app = app
-		.arrow(request(addCompression));
-
-	function compressStream(encoding, stream) {
-		encoding = encoding || 'none';
-		return stream.pipe(compressionStreams[encoding]());
-	}
-
-	const headers = addHeaders(config);
+	//add the server to the response headers
+	app = app.arrow(request(addServer));
 
 	//handler to pass to the node server
 	//for requests
@@ -209,8 +173,7 @@ function startWebServer(config, app) {
 			.then(x => Async.run(app(x))) //then run it through the application
 			.then(x => {
 				//write the response headers and status
-				res.writeHead(x.response.status, 
-					headers(x.response.headers));
+				res.writeHead(x.response.status, x.response.headers);
 
 				//get compressed content, if we are compressing
 				const content = compressStream(
@@ -230,8 +193,7 @@ function startWebServer(config, app) {
 			});
 	}
 
-	//decide whether to run an http or https
-	//server
+	//create the appropriate type of http server
 	let server;
 	if (config.httpsKey)
 		server = https.createServer(httpsConfig(config), handler);
@@ -256,9 +218,9 @@ exports.startWebServer = startWebServer;
  */
 exports.defaultConfig = function() {
 	return {
-		port: 8080,
-		host: 'localhost',
+		port: 7842,
 		mime: {
+			'.ico': 'image/x-icon',
 			'.css': 'text/css',
 			'.jpg': 'image/jpeg',
 			'.jpeg': 'image/jpeg',

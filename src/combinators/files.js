@@ -78,34 +78,10 @@ function directoryListing(dirPath, urlPath, range) {
 
 		const upOne = path.join(urlPath, '..');
 
-		const output = `
-<html>
-	<head>
-		<title>Directory Listing - ${urlPath}</title>
-		<style>
-			table {
-				border-spacing: 10px;
-			}
+		const dirs = files.filter(([n,s]) => s.isDirectory());
+		const actualFiles = files.filter(([n,s]) => s.isFile());
 
-			.icon {
-				font-size: 130%;
-			}
-		</style>
-	</head>
-	<body>
-		<h1>Directory Listing</h1>
-		<h3>${urlPath}:</h3>
-		<table>
-			<thead>
-				<tr>
-					<th></th>
-					<th>Name</th>
-					<th>Size</th>
-					<th>Last Modified</th>
-				</tr>
-			</thead>
-			<tbody>
-			${files.map(([x, stats]) =>
+		const showFiles = files => files.map(([x, stats]) =>
 			 `
 			 <tr>
 			 	<td class="icon">
@@ -121,12 +97,42 @@ function directoryListing(dirPath, urlPath, range) {
 			 		${stats.mtime}
 			 	</td>
 			 </tr>
-			 `).join('\n\t\t\t')}
+			 `).join('\n\t\t\t');
+
+		const output = `<!DOCTYPE html>
+<html>
+	<head>
+		<title>Directory Listing - ${urlPath}</title>
+		<style>
+			table {
+				border-spacing: 10px;
+			}
+
+			.icon {
+				font-size: 130%;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<h2>Directory Listing - ${urlPath}</h2>
+		<h3>Contents:</h3>
+		<table>
+			<thead>
+				<tr>
+					<th></th>
+					<th>Name</th>
+					<th>Size</th>
+					<th>Last Modified</th>
+				</tr>
+			</thead>
+			<tbody>
+			${showFiles(dirs)}
+			${showFiles(actualFiles)}
 			</tbody>
 		</table>
 	</body>
-</html>
-			`;
+</html>`;
 		return output;
 	}
 

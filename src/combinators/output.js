@@ -23,12 +23,12 @@ const response = exports.response = function(status) {
 		return function(context) {
 			const headers = JSON.parse(JSON.stringify(context.response.headers));
 
+			let stream = content;
 			//handle buffer content -> turn into a ReadableStream
 			if (content instanceof Buffer) {
 				headers['Content-Length'] = Buffer.byteLength(content);
-				const contentStream = new PassThrough();
-				contentStream.end(content);
-				content = contentStream;
+				stream = new PassThrough();
+				stream.end(content);
 			}
 
 			const newContext = {
@@ -36,7 +36,7 @@ const response = exports.response = function(status) {
 				request: context.request,
 				response: {
 					status,
-					content,
+					content: stream,
 					headers
 				}
 			};
@@ -59,7 +59,7 @@ const setHeader = exports.setHeader = function(header) {
 				headers[header] = value;
 			else
 				delete headers[header];
-			
+
 			const newContext = {
 				runtime: context.runtime,
 				request: context.request,
@@ -100,12 +100,12 @@ exports.mime = function(type) {
 }
 
 /**
- *	compress :: string -> WebPart
+ *	encoding :: string -> WebPart
  *
- *	Compresses the response with the provided
- *	compression type(s).
+ *	Sets the content encoding. This will cause
+ *	compression of the output stream to occur.
  */
-exports.compress = function(type) {
+exports.encoding = function(type) {
 	return setHeader('Content-Encoding')(type)
 			.arrow(setHeader('Content-Length')(undefined));
 }

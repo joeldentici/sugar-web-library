@@ -208,6 +208,45 @@
 	
 		<div class="module-header">
 			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Compression">Sugar.Combinators.Compression</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Compression.func.compressionStreams">
+					<b>compressionStreams</b>
+				</a> <b>::</b> Map string TransformStream
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Compression.func.supportedCompression">
+					<b>supportedCompression</b>
+				</a> <b>::</b> Set string
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Compression.func.addCompression">
+					<b>addCompression</b>
+				</a> <b>::</b> HttpRequest &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Compression.func.compress">
+					<b>compress</b>
+				</a> <b>::</b> WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Compression.func.compressStream">
+					<b>compressStream</b>
+				</a> <b>::</b> string &#8594; ReadableStream &#8594; ReadableStream
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
 			Module: <a href="#doc.module.Sugar.Combinators.Files">Sugar.Combinators.Files</a>
 			</div>
 			<ul class="module-functions">
@@ -219,9 +258,39 @@
 			</li>
 		
 			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.readdir">
+					<b>readdir</b>
+				</a> <b>::</b> string &#8594; Async Error [string]
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.displaySize">
+					<b>displaySize</b>
+				</a> <b>::</b> int &#8594; string
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.directoryListing">
+					<b>directoryListing</b>
+				</a> <b>::</b> string &#8594; string &#8594; Async Error File
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.getRange">
+					<b>getRange</b>
+				</a> <b>::</b> HttpRequest &#8594; Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Files.func.createFile">
+					<b>createFile</b>
+				</a> <b>::</b> string &#8594; ReadableStream &#8594; int &#8594; Object
+			</li>
+		
+			<li>
 				<a href="#doc.module.Sugar.Combinators.Files.func.openFile">
 					<b>openFile</b>
-				</a> <b>::</b> string &#8594; Async Error File
+				</a> <b>::</b> Object &#8594; Async Error File
 			</li>
 		
 			<li>
@@ -239,7 +308,7 @@
 			<li>
 				<a href="#doc.module.Sugar.Combinators.Files.func.doFile">
 					<b>doFile</b>
-				</a> <b>::</b> (File &#8594; WebPart) &#8594; string &#8594; Async () WebPart
+				</a> <b>::</b> (File &#8594; WebPart) &#8594; Object &#8594; Async () WebPart
 			</li>
 		
 			<li>
@@ -401,7 +470,7 @@
 			<li>
 				<a href="#doc.module.Sugar.Combinators.Output.func.response">
 					<b>response</b>
-				</a> <b>::</b> int &#8594; string | Buffer | File &#8594; WebPart
+				</a> <b>::</b> int &#8594; Buffer | ReadableStream &#8594; WebPart
 			</li>
 		
 			<li>
@@ -419,6 +488,12 @@
 			<li>
 				<a href="#doc.module.Sugar.Combinators.Output.func.mime">
 					<b>mime</b>
+				</a> <b>::</b> string &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Output.func.encoding">
+					<b>encoding</b>
 				</a> <b>::</b> string &#8594; WebPart
 			</li>
 		
@@ -693,15 +768,15 @@
 			</li>
 		
 			<li>
-				<a href="#doc.module.Sugar.Server.func.addHeaders">
-					<b>addHeaders</b>
-				</a> <b>::</b> Object &#8594; Object &#8594; Object
-			</li>
-		
-			<li>
 				<a href="#doc.module.Sugar.Server.func.httpsConfig">
 					<b>httpsConfig</b>
 				</a> <b>::</b> Object &#8594; Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.addServer">
+					<b>addServer</b>
+				</a> <b>::</b> HttpRequest &#8594; WebPart
 			</li>
 		
 			<li>
@@ -887,6 +962,83 @@ function that is not asynchronous.
 			</div>
 		</div>
 	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Compression">
+			<div class="module-name">
+				Module: Sugar.Combinators.Compression
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 6/18/2017
+			</div>
+			<div class="module-desc">
+			Provides combinators for performing
+compression on responses.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Compression.func.compressionStreams">
+				<div class="function-name">
+					<b>compressionStreams</b> <b>::</b> Map string TransformStream
+				</div>
+				<div class="function-desc">
+					
+Map encoding types to compression stream constructors.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Compression.func.supportedCompression">
+				<div class="function-name">
+					<b>supportedCompression</b> <b>::</b> Set string
+				</div>
+				<div class="function-desc">
+					
+Set of supported compression type.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Compression.func.addCompression">
+				<div class="function-name">
+					<b>addCompression</b> <b>::</b> HttpRequest &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Adds compression to the HttpResponse if
+the request accepts a supported encoding.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Compression.func.compress">
+				<div class="function-name">
+					<b>compress</b> <b>::</b> WebPart
+				</div>
+				<div class="function-desc">
+					
+Adds compression to the response, if the
+requestor supports it.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Compression.func.compressStream">
+				<div class="function-name">
+					<b>compressStream</b> <b>::</b> string &#8594; ReadableStream &#8594; ReadableStream
+				</div>
+				<div class="function-desc">
+					
+Compresses the provided stream with the compression
+algorithm for the provided encoding.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
 		<div class="module-description" id="doc.module.Sugar.Combinators.Files">
 			<div class="module-name">
 				Module: Sugar.Combinators.Files
@@ -923,9 +1075,67 @@ Stats a file on the local filesystem.
 			</div>
 		
 			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.readdir">
+				<div class="function-name">
+					<b>readdir</b> <b>::</b> string &#8594; Async Error [string]
+				</div>
+				<div class="function-desc">
+					
+Reads the files in a directory.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.displaySize">
+				<div class="function-name">
+					<b>displaySize</b> <b>::</b> int &#8594; string
+				</div>
+				<div class="function-desc">
+					
+Returns a human readable representation
+of the provided size (which should be in bytes)
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.directoryListing">
+				<div class="function-name">
+					<b>directoryListing</b> <b>::</b> string &#8594; string &#8594; Async Error File
+				</div>
+				<div class="function-desc">
+					
+Creates an HTML directory listing from a directory.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.getRange">
+				<div class="function-name">
+					<b>getRange</b> <b>::</b> HttpRequest &#8594; Object
+				</div>
+				<div class="function-desc">
+					
+Parses the range header of an HTTP Request and
+returns an object containing the range.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Files.func.createFile">
+				<div class="function-name">
+					<b>createFile</b> <b>::</b> string &#8594; ReadableStream &#8594; int &#8594; Object
+				</div>
+				<div class="function-desc">
+					
+Creates a new File object using the specified parameters.<br><br>If a range is specified, the File will be sent as a partial
+response when send is used.
+				</div>
+			</div>
+		
+			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Files.func.openFile">
 				<div class="function-name">
-					<b>openFile</b> <b>::</b> string &#8594; Async Error File
+					<b>openFile</b> <b>::</b> Object &#8594; Async Error File
 				</div>
 				<div class="function-desc">
 					
@@ -941,7 +1151,8 @@ Opens a file on the local filesystem.
 				<div class="function-desc">
 					
 WebPart that send the byte stream contained in the file object
-to the client. Sent in an HTTP 200 OK response.<br><br>The Content-Type header will be set as follows:<br><br>If the extension in file.name is in context.runtime.mime
+to the client. Sent in an HTTP 200 OK or 206 Partial response.<br><br>If the File is a partial File, then a partial response will be
+sent.<br><br>The Content-Type header will be set as follows:<br><br>If the extension in file.name is in context.runtime.mime
 then the mime type will be used<br><br>Otherwise, 'application/octet-stream' will be used, which
 will cause most browsers to download the file
 				</div>
@@ -965,14 +1176,12 @@ provided by the file object.
 			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Files.func.doFile">
 				<div class="function-name">
-					<b>doFile</b> <b>::</b> (File &#8594; WebPart) &#8594; string &#8594; Async () WebPart
+					<b>doFile</b> <b>::</b> (File &#8594; WebPart) &#8594; Object &#8594; Async () WebPart
 				</div>
 				<div class="function-desc">
 					
 Reads a file from disk, then maps it to the appropriate
-web part by applying the provided action.<br><br>The resulting WebPart will return an HTTP 404 Not Found
-error containing the message of any error that occurs
-while loading the file.
+web part by applying the provided action.
 				</div>
 			</div>
 		
@@ -1296,13 +1505,13 @@ modifying HTTP responses.
 			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Output.func.response">
 				<div class="function-name">
-					<b>response</b> <b>::</b> int &#8594; string | Buffer | File &#8594; WebPart
+					<b>response</b> <b>::</b> int &#8594; Buffer | ReadableStream &#8594; WebPart
 				</div>
 				<div class="function-desc">
 					
 General purpose HTTP response web part that accepts the HTTP status
 code, and the response content. The response content can be in the
-form of a string, a byte buffer, or a File, which consists of a ReadableStream,
+form of a byte buffer, or a File, which consists of a ReadableStream,
 file name, mime type, and file size.
 				</div>
 			</div>
@@ -1340,6 +1549,18 @@ text/plain.
 					
 Web Part that sets the
 Content-Type header for the HTTP response
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Output.func.encoding">
+				<div class="function-name">
+					<b>encoding</b> <b>::</b> string &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Sets the content encoding. This will cause
+compression of the output stream to occur.
 				</div>
 			</div>
 		
@@ -1896,18 +2117,6 @@ node HTTP server to create a Sugar HttpContext
 			</div>
 		
 			<div class="function-description"
-			id="doc.module.Sugar.Server.func.addHeaders">
-				<div class="function-name">
-					<b>addHeaders</b> <b>::</b> Object &#8594; Object &#8594; Object
-				</div>
-				<div class="function-desc">
-					
-Adds additional headers to the headers
-the server responds with.
-				</div>
-			</div>
-		
-			<div class="function-description"
 			id="doc.module.Sugar.Server.func.httpsConfig">
 				<div class="function-name">
 					<b>httpsConfig</b> <b>::</b> Object &#8594; Object
@@ -1918,6 +2127,17 @@ Loads the SSL private key and signed certificate
 pair from disk, given the configuration object
 for startWebServer.<br><br>The returned object can be passed to the nodejs
 https server constructor.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.addServer">
+				<div class="function-name">
+					<b>addServer</b> <b>::</b> HttpRequest &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Adds the server response header.
 				</div>
 			</div>
 		
@@ -2003,7 +2223,7 @@ components, and parses the query string.
 			</div>
 
 			<div class="footer">
-			This documentation was generated by <code>hmdoc</code> on <code>6/27/2017, 11:37:42 PM</code>
+			This documentation was generated by <code>hmdoc</code> on <code>6/28/2017, 10:35:29 PM</code>
 			</div>
 		</body>
 	</html>

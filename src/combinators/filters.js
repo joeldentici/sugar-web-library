@@ -1,6 +1,7 @@
 const {zip} = require('js-helpers');
 const {response} = require('./output.js');
 const Async = require('monadic-js').Async;
+const path = require('path');
 
 /**
  *	Sugar.Combinators.Filters
@@ -75,6 +76,10 @@ exports.POST = method("POST");
  */
 exports.HEAD = method("HEAD");
 
+function toPath(str) {
+	return path.normalize(path.join(str, '/.'));
+}
+
 /**
  *	path :: string -> WebPart
  *
@@ -82,7 +87,8 @@ exports.HEAD = method("HEAD");
  *	the provided URI.
  */
 exports.path = function(pathStr) {
-	return test(ctx => ctx.request.url === pathStr,
+	return test(ctx => toPath(ctx.request.url) 
+		=== toPath(pathStr),
 	 "Path match failure");
 }
 
@@ -94,7 +100,8 @@ exports.path = function(pathStr) {
  */
 exports.pathStarts = function(pathStr) {
 	return test(
-		ctx => ctx.request.url.startsWith(pathStr),
+		ctx => toPath(ctx.request.url)
+			.startsWith(toPath(pathStr)),
 		'Path match failure');
 }
 

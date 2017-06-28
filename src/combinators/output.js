@@ -1,4 +1,5 @@
 const Async = require('monadic-js').Async;
+const PassThrough = require('stream').PassThrough;
 
 /**
  *	Sugar.Combinators.Output
@@ -10,21 +11,28 @@ const Async = require('monadic-js').Async;
  */
 
 /**
- *	response :: int -> string | Buffer | File -> WebPart
+ *	response :: int -> Buffer | ReadableStream -> WebPart
  *
  *	General purpose HTTP response web part that accepts the HTTP status
  *	code, and the response content. The response content can be in the
- *	form of a string, a byte buffer, or a File, which consists of a ReadableStream,
+ *	form of a byte buffer, or a File, which consists of a ReadableStream,
  *	file name, mime type, and file size.
  */
 const response = exports.response = function(status) {
 	return function(content) {
 		return function(context) {
 			const headers = JSON.parse(JSON.stringify(context.response.headers));
-			try{
+
+			//handle buffer content -> turn into a ReadableStream
+			if (content instanceof Buffer) {
 				headers['Content-Length'] = Buffer.byteLength(content);
-			} catch (e) {}
+				const contentStream = new PassThrough();
+				contentStream.end(content);
+				content = contentStream;
+			}
+
 			const newContext = {
+				runtime: context.runtime,
 				request: context.request,
 				response: {
 					status,
@@ -47,8 +55,13 @@ const setHeader = exports.setHeader = function(header) {
 	return function(value) {
 		return function(context) {
 			const headers = JSON.parse(JSON.stringify(context.response.headers));
-			headers[header] = value;
+			if (value)
+				headers[header] = value;
+			else
+				delete headers[header];
+			
 			const newContext = {
+				runtime: context.runtime,
 				request: context.request,
 				response: {
 					status: context.response.status,
@@ -71,7 +84,7 @@ const setHeader = exports.setHeader = function(header) {
  */
 const text = exports.text = function(status) {
 	return function(content) {
-		return response(status)(content)
+		return response(status)(Buffer.from(content))
 			.arrow(setHeader('Content-Type')('text/plain'));
 	}
 }
@@ -84,4 +97,15 @@ const text = exports.text = function(status) {
  */
 exports.mime = function(type) {
 	return setHeader('Content-Type')(type);
+}
+
+/**
+ *	compress :: string -> WebPart
+ *
+ *	Compresses the response with the provided
+ *	compression type(s).
+ */
+exports.compress = function(type) {
+	return setHeader('Content-Encoding')(type)
+			.arrow(setHeader('Content-Length')(undefined));
 }

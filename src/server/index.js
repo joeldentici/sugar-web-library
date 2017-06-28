@@ -3,6 +3,11 @@ const https = require('https');
 const {parseUrl, parseQuery} = require('../util/parsers.js');
 const fs = require('fs');
 const Async = require('monadic-js').Async;
+const {compress} = require('../combinators/output');
+const {request} = require('../sugar.js');
+const zlib = require('zlib');
+const PassThrough = require('stream').PassThrough;
+
 /**
  *	Sugar.Server
  *	written by Joel Dentici
@@ -163,6 +168,37 @@ function httpsConfig(config) {
  *	through the specified Web Part.
  */
 function startWebServer(config, app) {
+	/* add compression to the app */
+	const compressionStreams = {
+		deflate: zlib.createDeflate,
+		gzip: zlib.createGzip,
+		'none': () => new PassThrough(),
+	};
+
+	const supportedCompression = new Set(Object.keys(compressionStreams));
+
+	//TODO: Make the accept-encoding parse conformant
+	function addCompression(request) {
+		if (request.headers['accept-encoding']) {
+			const algs = request.headers['accept-encoding']
+				.split(',')
+				.map(x => x.trim());
+			const usableAlgs = algs.filter(x => supportedCompression.has(x));
+			if (usableAlgs.length)
+				return compress(usableAlgs[0]);
+		}
+
+		return Async.unit;
+	}
+
+	app = app
+		.arrow(request(addCompression));
+
+	function compressStream(encoding, stream) {
+		encoding = encoding || 'none';
+		return stream.pipe(compressionStreams[encoding]());
+	}
+
 	const headers = addHeaders(config);
 
 	//handler to pass to the node server
@@ -176,16 +212,13 @@ function startWebServer(config, app) {
 				res.writeHead(x.response.status, 
 					headers(x.response.headers));
 
-				const content = x.response.content;
-				if (typeof content === 'string' || content instanceof Buffer)
-					//for a buffer or string response,
-					//we simply write the response all at once
-					res.end(content);
-				else {
-					//for a stream response, we pipe it to the
-					//node http response
-					content.pipe(res);
-				}
+				//get compressed content, if we are compressing
+				const content = compressStream(
+					x.response.headers['Content-Encoding'],
+					x.response.content);
+
+				//output the content to the response
+				content.pipe(res);
 			})
 			.catch(x => {
 				//log any error that propagated all the way up here

@@ -34,4 +34,4 @@ exports.ACCEPTED = text(202);
  *
  *	HTTP status 204 response
  */
-exports.NO_CONTENT = response(204)('');
+exports.NO_CONTENT = response(204)(Buffer.alloc(0));

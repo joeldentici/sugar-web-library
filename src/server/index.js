@@ -262,7 +262,7 @@ exports.defaultConfig = function() {
 			'.css': 'text/css',
 			'.jpg': 'image/jpeg',
 			'.jpeg': 'image/jpeg',
-			'.js': 'text/js',
+			'.js': 'application/javascript',
 			'.html': 'text/html',
 			'.htm': 'text/html',
 		}

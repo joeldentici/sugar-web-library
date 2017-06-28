@@ -1,10 +1,13 @@
 const {setHeader, response, mime} = require('./output.js');
+
 const fs = require('fs');
 const path = require('path');
 const {asyncRequest} = require('../sugar.js');
 const {NOT_FOUND} = require('./requesterrors.js');
 
 const Async = require('monadic-js').Async;
+const PassThrough = require('stream').PassThrough;
+const {mapM} = require('monadic-js').Utility;
 
 /**
  *	Sugar.Combinators.Files
@@ -33,23 +36,217 @@ const Async = require('monadic-js').Async;
 const stat = Async.wrap(fs.stat);
 
 /**
- *	openFile :: string -> Async Error File
+ *	readdir :: string -> Async Error [string]
+ *
+ *	Reads the files in a directory.
+ */
+const readdir = Async.wrap(fs.readdir);
+
+/**
+ *	displaySize :: int -> string
+ *
+ *	Returns a human readable representation
+ *	of the provided size (which should be in bytes)
+ */
+function displaySize(size, decSig) {
+	const prefixes = [
+		['TiB', Math.pow(2, 40)],
+		['GiB', Math.pow(2, 30)],
+		['MiB', Math.pow(2, 20)],
+		['KiB', Math.pow(2, 10)],
+	];
+
+	for (let [prefix, sig] of prefixes) {
+		if (size / sig > 1) {
+			const pSize = (size / sig).toFixed(decSig);
+
+			return `${pSize} ${prefix}`;
+		}
+	}
+
+	return `${size} B`;
+}
+
+/**
+ *	directoryListing :: string -> string -> Async Error File
+ *
+ *	Creates an HTML directory listing from a directory.
+ */
+function directoryListing(dirPath, urlPath) {
+	function toHTML(files) {
+		const getPath = (file) => path.join(urlPath, file);
+
+		const upOne = path.join(urlPath, '..');
+
+		const output = `
+<html>
+	<head>
+		<title>Directory Listing - ${urlPath}</title>
+		<style>
+			table {
+				border-spacing: 10px;
+			}
+
+			.icon {
+				font-size: 130%;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Directory Listing</h1>
+		<h3>${urlPath}:</h3>
+		<table>
+			<thead>
+				<tr>
+					<th></th>
+					<th>Name</th>
+					<th>Size</th>
+					<th>Last Modified</th>
+				</tr>
+			</thead>
+			<tbody>
+			${files.map(([x, stats]) =>
+			 `
+			 <tr>
+			 	<td class="icon">
+			 		${stats.isFile() ? '&#x1F5CE;': '&#x1F5C0;'}
+			 	</td>
+			 	<td>
+			 		<a href="${getPath(x)}">${x}</a>
+			 	</td>
+			 	<td>
+			 		${displaySize(stats.size)}
+			 	</td>
+			 	<td>
+			 		${stats.mtime}
+			 	</td>
+			 </tr>
+			 `).join('\n\t\t\t')}
+			</tbody>
+		</table>
+	</body>
+</html>
+			`;
+		return output;
+	}
+
+	function toStream(buffer) {
+		const stream = new PassThrough();
+		stream.end(buffer);
+		return stream;
+	}
+
+	function readStats(fileName) {
+		return stat(path.join(dirPath, fileName))
+				.map(stats => [fileName, stats]);
+	}
+
+	return readdir(dirPath)
+		.map(fileNames => ['.', '..'].concat(fileNames))
+		.bind(fileNames => mapM(Async, readStats, fileNames))
+		.map(files => files.filter(([n,s]) => 
+			s.isFile() || s.isDirectory()))
+		.map(toHTML)
+		.map(listing => createFile(
+			'directory.html',
+			toStream(Buffer.from(listing)),
+			Buffer.byteLength(listing)
+		));
+}
+
+/**
+ *	getRange :: HttpRequest -> Object
+ *
+ *	Parses the range header of an HTTP Request and
+ *	returns an object containing the range.
+ */
+const getRange = exports.getRange = function(request) {
+	if (request.headers['range']) {
+		const header = request.headers['range'].replace(/^.*=/g, '');
+		const [start, end] = header.split('-').map(x => x.trim());
+		return {
+			start: Number.parseInt(start || 0),
+			end: Number.parseInt(end || 0),
+		};
+	}
+	else {
+		return null;
+	}
+}
+
+/**
+ *	createFile :: string -> ReadableStream -> int -> Object
+ *
+ *	Creates a new File object using the specified parameters.
+ *
+ *	If a range is specified, the File will be sent as a partial
+ *	response when send is used.
+ */
+const createFile = exports.createFile = function(name, stream, size, range = null) {
+	if (range) {
+		return {
+			name,
+			stream,
+			length: range.end - range.start,
+			start: range.start,
+			end: range.end,
+			size,
+			partial: true,
+		};
+	}
+	else {
+		return {
+			name,
+			stream,
+			size,
+			length: size,
+			partial: false,
+		};
+	}
+}
+
+/**
+ *	openFile :: Object -> Async Error File
  *
  *	Opens a file on the local filesystem.
  */
-const openFile = exports.openFile = function(name) {
-	const fileName = name.substring(name.lastIndexOf(path.sep) + 1);
+const openFile = exports.openFile = function({name, urlPath, range}) {
+	const fileName = name
+		.substring(name.lastIndexOf(path.sep) + 1)
+		.replace(/\|\\\//g, '-');
+
+	function loadFile(stats) {
+		//make sure we always have a range to work with
+		const r = range || {
+			start: 0,
+			end: stats.size
+		};
+
+		//upper bound our range limits to the actual file limits
+		const r2 = {
+			start: Math.max(0, Math.min(r.start, stats.size)),
+			end: Math.min(Math.max(0, r.end), stats.size),
+		};
+
+		//create a File object with our fixed range
+		return createFile(
+			fileName,
+			fs.createReadStream(name, r2),
+			stats.size,
+			r2
+		);
+	}
+
 	return stat(name)
 		.bind(stats => {
 			if (stats.isFile()) {
-				return Async.unit({
-					name: fileName.replace(/\|\\\//g, '-'),
-					stream: fs.createReadStream(name),
-					size: stats.size,
-				});
+				return Async.unit(loadFile(stats));
+			}
+			else if (stats.isDirectory()) {
+				return directoryListing(name, urlPath);
 			}
 			else {
-				return Async.fail(new Error("Not a file"));
+				return Async.fail(new Error("Not a file or directory"));
 			}
 		});
 }
@@ -58,7 +255,10 @@ const openFile = exports.openFile = function(name) {
  *	send :: File -> WebPart
  *
  *	WebPart that send the byte stream contained in the file object
- *	to the client. Sent in an HTTP 200 OK response.
+ *	to the client. Sent in an HTTP 200 OK or 206 Partial response.
+ *
+ *	If the File is a partial File, then a partial response will be
+ *	sent.
  *
  *	The Content-Type header will be set as follows:
  *
@@ -74,9 +274,26 @@ const send = exports.send = function(file) {
 		const mimeType = context.runtime.mime[extension]
 			|| 'application/octet-stream';
 
-		const handle = response(200)(file.stream)
-			.arrow(mime(mimeType))
-			.arrow(setHeader('Content-Length')(file.size));
+
+		let handle;
+		if (context.request.method === 'HEAD') {
+			const range = file.partial ? 'bytes' : 'none';
+
+			handle = response(200)(Buffer.alloc(0))
+				.arrow(setHeader('Accept-Ranges')(range));
+		}
+		else if (file.partial && file.size > file.length) {
+			handle = response(206)(file.stream)
+				.arrow(mime(mimeType))
+				.arrow(setHeader('Content-Length')(file.length))
+				.arrow(setHeader('Content-Range')(
+					`bytes=${file.start}-${file.end}/${file.size}`))
+		}
+		else {
+			handle = response(200)(file.stream)
+				.arrow(mime(mimeType))
+				.arrow(setHeader('Content-Length')(file.length));
+		}
 
 		return handle(context);
 	}
@@ -98,7 +315,7 @@ const download = exports.download = function(file) {
 
 
 /**
- *	doFile :: (File -> WebPart) -> string -> Async () WebPart
+ *	doFile :: (File -> WebPart) -> Object -> Async () WebPart
  *
  *	Reads a file from disk, then maps it to the appropriate
  *	web part by applying the provided action.
@@ -108,8 +325,8 @@ const download = exports.download = function(file) {
  *	while loading the file.
  */
 function doFile(action) {
-	return function(filePath) {
-		return Async.try(openFile(filePath).map(action))
+	return function(fileOptions) {
+		return Async.try(openFile(fileOptions).map(action))
 			    	.catch(e => Async.unit(NOT_FOUND(
 			    		"The requested file could not be found: " + e.toString())));		
 	}
@@ -163,7 +380,11 @@ const resolvePath = exports.resolvePath = function(rootPath, fileName) {
  */
 const browse = exports.browse = function(rootPath, urlMap = (x => x)) {
 	return asyncRequest(request => 
-		sendFile(resolvePath(rootPath, urlMap(request.url))));
+		sendFile({
+			name: resolvePath(rootPath, urlMap(request.url)),
+			urlPath: urlMap(request.url),
+			range: getRange(request),
+		}));
 }
 
 /**

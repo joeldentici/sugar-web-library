@@ -176,6 +176,7 @@ function addServer(request) {
  *		0 - No logging
  *		1 - Logging when server starts listening and when an error occurs
  *		2 - Logging of requests + Level 1
+ *		3 - Level 2 + Logging of HttpContext before and after processing
  */
 function startWebServer(config, app, verbose = 0) {
 	//add the server to the response headers
@@ -190,8 +191,15 @@ function startWebServer(config, app, verbose = 0) {
 
 		//create context for the request
 		createContext(req, res, config)
-			.then(x => Async.run(app(x))) //then run it through the application
 			.then(x => {
+				verbose > 2 && console.log(`Input HttpContext for ${id}`, x);
+				return x;
+			})
+			.then(x => Async.run(app(x))) //then run it through the application
+			.then(x => {				
+				verbose > 1 && console.log(`Request ${id} processed, sending response`);
+				verbose > 2 && console.log(`Output HttpContext for ${id}`, x);
+
 				//write the response headers and status
 				res.writeHead(x.response.status, x.response.headers);
 
@@ -200,18 +208,17 @@ function startWebServer(config, app, verbose = 0) {
 					x.response.headers['Content-Encoding'],
 					x.response.content);
 
-				//output the content to the response
-				content.pipe(res);
-
 				//close the content stream if the request ends
 				//while we are sending data so resources can
 				//be cleaned up ASAP
 				req.on('close', () => x.response.content.end());
 
-				res.on('close', () => verbose > 1 && console.log(
-					`Response sent for request ${id}`))
+				x.response.content.on('end', () => verbose > 1 && console.log(
+					`Response sent for request ${id}`));
 
-				verbose > 1 && console.log(`Request ${id} processed, sending response`);
+				//output the content to the response
+				content.pipe(res);
+
 			})
 			.catch(x => {
 				//log any error that propagated all the way up here

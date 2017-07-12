@@ -112,7 +112,7 @@ function test() {
 			content: null
 		}
 	};
-	Async.run(event(testContext))
+	Async.run(app(testContext))
 		.then(context => {
 			console.log(context.response.headers);
 			console.log('');

@@ -167,10 +167,15 @@ function addServer(request) {
 }
 
 /**
- *	startWebServer :: Object -> WebPart -> HttpServer
+ *	startWebServer :: (Object, WebPart, int) -> HttpServer
  *
  *	Runs a web server that processes each request
  *	through the specified Web Part.
+ *
+ *	The verbosity levels cause logging as follows:
+ *		0 - No logging
+ *		1 - Logging when server starts listening and when an error occurs
+ *		2 - Logging of requests + Level 1
  */
 function startWebServer(config, app, verbose = 0) {
 	//add the server to the response headers
@@ -202,6 +207,9 @@ function startWebServer(config, app, verbose = 0) {
 				//while we are sending data so resources can
 				//be cleaned up ASAP
 				req.on('close', () => x.response.content.end());
+
+				res.on('close', () => verbose > 1 && console.log(
+					`Response sent for request ${id}`))
 
 				verbose > 1 && console.log(`Request ${id} processed, sending response`);
 			})

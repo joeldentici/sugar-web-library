@@ -1,0 +1,128 @@
+const Sugar = require('../src/sugar.js');
+
+const {GET, path} = Sugar.Combinators.Filters;
+const {toEventStream} = Sugar.Combinators.Events;
+const {NOT_FOUND} = Sugar.Combinators.RequestErrors;
+const {OK} = Sugar.Combinators.Successful;
+const {request} = Sugar;
+const {compress} = Sugar.Combinators.Compression;
+const {mime} = Sugar.Combinators.Output;
+const Async = require('monadic-js').Async;
+const Rx = require('rx');
+
+/**
+ *	This test creates a mini-app that serves
+ *	an event stream of the server's current time
+ *	at a specified interval in ms.
+ */
+
+//gets an observable of server time events
+const getTimeEvents = function(delay) {
+	delay = delay > 1000 ? delay : 1000;
+
+	return Rx.Observable.interval(delay)
+		.startWith(null)
+		.map(_ => ({
+			__type__: 'Time',
+			time: new Date(),
+		}))
+}
+
+//constructs an event stream WebPart with
+//an observable obtained from getTimeEvents
+//using the time specified in the request
+const timeEvents = function(request) {
+	return toEventStream(getTimeEvents(request.query.interval));
+}
+
+//the will connect to the event stream
+//and give us the current server time
+const doc = `
+<html>
+	<head>
+		<title>Server Time</title>
+		<script>
+			function load(url) {
+				const e = new EventSource(url);
+				e.addEventListener('Time', function(e) {
+					const data = JSON.parse(e.data);
+					const time = new Date(data.time).toLocaleString();
+
+					document.body.innerText = 'Server time' + ': ' + time;
+				});
+				return e;
+			}
+		</script>
+	</head>
+	<body>
+		<script>
+			load('/timeEvents?interval=1000');
+		</script>
+	</body>
+</html>
+`;
+
+//web part for loading time events
+const events = expr { 
+	GET >=> 
+		path('/timeEvents') 
+			>=> request(timeEvents)
+}
+
+//web part for loading the document
+const time = expr {
+	GET >=>
+		path('/time')
+			>=> OK(doc) 
+			>=> mime('text/html') 
+			>=> compress
+}
+
+//web part when an error occurs
+const err = NOT_FOUND('Could not locate requested resource!');
+
+//test app just serves whichever of the three
+//web parts gets matched first
+const app = expr {
+	events <|> time <|> err
+}
+
+//test on console
+function test() {
+	const testContext = {
+		request: {
+			version: '1.1',
+			url: '/events',
+			host: 'localhost',
+			method: 'GET',
+			headers: {},
+			query: {
+				time: 5000
+			},
+			form: {},
+			files: {},
+			body: null
+		},
+		runtime: Object.assign({}, Sugar.Server.defaultConfig(), {
+			https: false
+		}),
+		response: {
+			status: 0,
+			headers: {},
+			content: null
+		}
+	};
+	Async.run(event(testContext))
+		.then(context => {
+			console.log(context.response.headers);
+			console.log('');
+			context.response.content.pipe(process.stdout);
+		})	
+}
+
+//run a test webserver
+function run() {
+	Sugar.Server.startWebServer(Sugar.Server.defaultConfig(), app, 2);
+}
+
+run();

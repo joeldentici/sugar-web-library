@@ -30,11 +30,16 @@ HttpRequest = {
 	method: string,
 	headers: object,
 	query: object,
-	form: object,
-	files: [FileUpload]
+	form: Form,
+	body: ReadableStream
 }
 
-FileUpload = (string, ReadableStream)
+Form = Map string (string | FileUpload)
+
+FileUpload = {
+	name: string, 
+	stream: ReadableStream
+}
 
 File = {
 	size: int,
@@ -45,7 +50,7 @@ File = {
 HttpResponse = {
 	status: int,
 	headers: object,
-	content: string | Buffer | File
+	content: ReadableStream
 }
 
 HttpContext = {
@@ -113,6 +118,9 @@ exports.Operators = require('./operators/index.js');
 exports.Server = require('./server/index.js');
 exports.Combinators = {
 	Authentication: require('./combinators/authentication.js'),
+	Compression: require('./combinators/compression.js'),
+	CQRS: require('./combinators/cqrs.js'),
+	Events: require('./combinators/events.js'),
 	Files: require('./combinators/files.js'),
 	Filters: require('./combinators/filters.js'),
 	Intermediate: require('./combinators/intermediate.js'),
@@ -122,8 +130,8 @@ exports.Combinators = {
 	RequestErrors: require('./combinators/requesterrors.js'),
 	ServerErrors: require('./combinators/servererrors.js'),
 	Successful: require('./combinators/successful.js'),
-	Compression: require('./combinators/compression.js'),
 };
 exports.Util = {
 	Parsers: require('./util/parsers.js'),
+	JWT: require('./util/jwt.ejs'),
 };

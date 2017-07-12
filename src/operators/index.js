@@ -9,13 +9,20 @@
  *	ways.
  */
 
+/*
+
+
+NOTE: This module is no longer being used as monadic defines
+the proper operators
+
+*/
 
 /**
  *	arrow :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
  *	Kleisi Composition of monadic
  *	functions
  */
-function arrow(a, b) {
+/*function arrow(a, b) {
 	return function(x) {
 		return a(x).bind(b);
 	}
@@ -33,21 +40,22 @@ const Async = require('monadic-js').Async;
  *	This is essentially an alternative instance for Async
  *	combinators.
  */
-function or(a, b) {
+/*function or(a, b) {
 	return function(x) {
 		return Async.try(a(x)).catch(e => b(x));
 	}
 }
 
 /* Attach Kleisi composition as defined above to the Function Prototype */
-Function.prototype.arrow = function(b) {
+/*Function.prototype.arrow = function(b) {
 	return arrow(this, b);
 }
 
 /* Attach the alternative operator as defined above to the Function Prototype */
-Function.prototype.or = function(b) {
+/*Function.prototype.or = function(b) {
 	return or(this, b);
 }
 
 exports.arrow = arrow;
 exports.or = or;
+*/

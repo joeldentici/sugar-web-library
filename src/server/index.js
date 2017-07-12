@@ -41,7 +41,7 @@ function parseUrlEncodedForm(rawForm) {
 }
 
 /**
- *	getFormParser :: string -> Buffer -> Map string string
+ *	getFormParser :: string -> Buffer -> Map string (string | FileUpload)
  *
  *	Gets a form parser for a content type. If no
  *	parser is defined for the content type, then a parser
@@ -49,6 +49,24 @@ function parseUrlEncodedForm(rawForm) {
  */
 function getFormParser(contentType) {
 	return formParsers[contentType] || (rawForm => {});
+}
+
+/**
+ *	parseForm :: NodeHttpRequest -> Promise (Map string (string | FileUpload))
+ *
+ *	Parses the request body to get the form. If there is no
+ *	parser for the content type of the request, then no request
+ *	data is read and an empty form is returned.
+ */
+function parseForm(req) {
+	const contentType = req.headers['content-type'];
+	if (formParsers[contentType]) {
+		return getRawForm(req)
+			.then(getFormParser(contentType));
+	}
+	else {
+		return Promise.resolve({});
+	}
 }
 
 /**
@@ -72,19 +90,13 @@ function getRawForm(req) {
  *	a Promise.
  */
 function parseRequest(req) {
-	//raw request body
-	const rawForm = getRawForm(req);
 	//parse the request body to get form
-	const form = rawForm.then(getFormParser(req.headers['content-type']));
-	//TODO: parse the request body to get files
-	const files = Promise.resolve([]);
+	const getForm = parseForm(req);
 	//parse the URL to get path and query params/arguments
 	const [url, query] = parseUrl(req.url);
 
-	const ready = Promise.all([form, files, rawForm]);
-
-	//once form and files are parsed
-	return ready.then(([form, files, rawForm]) => ({
+	//once form is parsed
+	return getForm.then(form => ({
 		version: req.httpVersion,
 		url,
 		host: req.headers.host,
@@ -92,8 +104,7 @@ function parseRequest(req) {
 		headers: req.headers,
 		query,
 		form,
-		files,
-		rawForm
+		body: req,
 	}));
 }
 
@@ -161,13 +172,17 @@ function addServer(request) {
  *	Runs a web server that processes each request
  *	through the specified Web Part.
  */
-function startWebServer(config, app) {
+function startWebServer(config, app, verbose = 0) {
 	//add the server to the response headers
 	app = app.arrow(request(addServer));
 
+	let reqID = 0;
 	//handler to pass to the node server
 	//for requests
 	function handler(req, res) {
+		const id = reqID++;
+		verbose > 1 && console.log(`Accepted request ${id}, Processing...`);
+
 		//create context for the request
 		createContext(req, res, config)
 			.then(x => Async.run(app(x))) //then run it through the application
@@ -182,10 +197,17 @@ function startWebServer(config, app) {
 
 				//output the content to the response
 				content.pipe(res);
+
+				//close the content stream if the request ends
+				//while we are sending data so resources can
+				//be cleaned up ASAP
+				req.on('close', () => x.response.content.end());
+
+				verbose > 1 && console.log(`Request ${id} processed, sending response`);
 			})
 			.catch(x => {
 				//log any error that propagated all the way up here
-				console.log("A serious error occurred", x);
+				verbose && console.error("A serious error occurred", x);
 				//clearly we can't do anything about this error so
 				//we should respond with an internal server error
 				res.writeHead(500, headers({'Content-Type': 'text/plain'}));
@@ -201,7 +223,10 @@ function startWebServer(config, app) {
 		server = http.createServer(handler);
 
 	//listen to incoming requests
-	server.listen(config.port);
+	server.listen(config.port, config.host, function() {
+		verbose && console.log(
+			`Listening ${config.host ? config.host + ':' : ''}${config.port}`);
+	});
 
 	return server;
 }

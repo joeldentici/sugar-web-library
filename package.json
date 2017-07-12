@@ -11,5 +11,8 @@
   "main": "src/sugar.js",
   "scripts": {
     "document": "hmdoc 'Sugar Web Server' src > documentation.html"
+  },
+  "dependencies": {
+    "rx": "^4.1.0"
   }
 }

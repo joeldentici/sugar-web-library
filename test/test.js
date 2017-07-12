@@ -9,4 +9,14 @@ There should be no output.
 
 const Sugar = require('../src/sugar.js');
 
-require('./jwt.ejs');
+const test = {
+	jwt: () => require('./jwt.ejs'),
+	events: () => require('./events.ejs'),
+};
+
+const [arg] = process.argv.slice(2);
+
+if (arg)
+	test[arg]();
+else
+	Object.keys(test).forEach(key => test[key]());

@@ -1,0 +1,186 @@
+const crypto = require('crypto');
+const monadic = require('monadic-js');
+const Either = monadic.Either;
+const {when} = monadic.Utility;
+
+/**
+ *	Sugar.Utility.JWT
+ *	written by Joel Dentici
+ *	on 7/12/2017
+ *
+ *	Provides an implementation of JSON Web
+ *	Tokens.
+ */
+
+class JWT {
+	/**
+	 *	new :: (string, string) -> JWT
+	 *
+	 *	Constructs a JWT
+	 */
+	constructor(privateKey, publicKey) {
+		this.algs = Object.keys(algs)
+			.reduce((acc, k) => {
+				acc[k] = algs[k](privateKey, publicKey);
+				return acc;
+			}, {});
+	}
+
+	/**
+	 *	createToken :: JWT -> (Object, string) -> Either Error string
+	 *
+	 *	Creates a JSON web token. If successful, the JWT is returned
+	 *	as a '.' separated base64 string that can be passed to
+	 *	authenticateToken.
+	 */
+	createToken(payload, alg = 'HS256') {
+		//verify that we have the requested hash algorithm
+		if (typeof this.algs[alg] !== 'object') {
+			return Either.Left(new Error(
+				'The provided hash algorithm is not supported'));
+		}
+
+		//create the data to sign
+		const header = {
+			typ: 'JWT',
+			alg,
+		};
+		const data = encode(header) + '.' + encode(payload);
+
+		//sign the data
+		const signature = this.algs[alg].sign(data);
+
+		//return the JWT header, payload, and signature
+		//as '.' separated base64 strings.
+		return Either.Right(data + '.' + signature);
+	}
+
+	/**
+	 *	authenticateToken :: JWT -> (string, string) -> Either Error Object
+	 *
+	 *	Verifies that the provided JSON web token was signed by
+	 *	our key.
+	 *
+	 *	If verification succeeds, the payload portion of the token
+	 *	is returned. Otherwise, an error is returned.
+	 */
+	authenticateToken(token, alg = 'HS256') {
+		return do Either {
+			//break token into base64 components
+			[headerB, payloadB, signatureB] = token.split('.')
+
+			//decode header and payload base64 components
+			header <- decode(headerB)
+			payload <- decode(payloadB)
+
+			//verify that the token can be handled
+			tokenError = AuthError('Not a JSON Web Token')
+			do! when(header.typ != "JWT", Either.Left(tokenError))
+
+			algError = AuthError('The hash algorithm used to create'
+				+ ' this token is not supported')
+			do! when(typeof this.algs[header.alg] != 'object', Either.Left(algError))
+
+			//this is very important, otherwise an attacker could dictate
+			//which algorithm to use
+			algMismatch = AuthError("The token's algorithm does not " +
+				"match the expected algorithm")
+			do! when(header.alg != alg, Either.Left(algMismatch))
+
+			//sign the header and payload and verify
+			//it matches the MAC on the token
+			data = headerB + '.' + payloadB
+			checkSignature = this.algs[alg].verify(data)
+			authError = AuthError('This token failed authentication')
+			do! when(checkSignature != signatureB, Either.Left(authError))
+
+			//give caller the payload as we have authenticated
+			//the token
+			return payload
+		}
+	}
+}
+
+class AuthenticationError extends Error {
+
+}
+
+/**
+ *	AuthError :: string -> AuthenticationError
+ *
+ *	Creates an authentication error with the
+ *	specified reason for failing.
+ */
+const AuthError = x => new AuthenticationError(x);
+
+/**
+ *	algs :: Map string ((string, string) -> JWTAlgorithm)
+ *
+ *	Constructors for the cryptographic algorithms used by JWT
+ */
+const algs = {
+	'HS256': hmacsha('256'),
+	'HS512': hmacsha('512'),
+}
+
+/**
+ *	hmacsha :: int -> (string, string) -> JWTAlgorithm
+ *
+ *	Constructs an HMAC SHA-bits JWTAlgorithm.
+ */
+function hmacsha(bits) {
+	return function(key, _) {
+		const hash = function(data) {
+			const hmac = crypto.createHmac('sha' + bits, key);
+			hmac.update(data);
+			return hmac.digest('base64');
+		}
+
+		return {
+			sign: hash,
+			verify: hash
+		};
+	}
+}
+
+/**
+ *	encode :: Object -> string
+ *
+ *	Encodes a JavaScript object to a
+ *	base64 string.
+ */
+function encode(data) {
+	return new Buffer(JSON.stringify(data))
+		.toString('base64');
+}
+
+/**
+ *	decode :: string -> Either Error Object
+ *
+ *	Decodes a base64 string to a JavaScript
+ *	object.
+ */
+function decode(data) {
+	const json = new Buffer(data, 'base64').toString('utf8');
+	try {
+		return Either.Right(JSON.parse(json));
+	}
+	catch (e) {
+		return Either.Left(e);
+	}
+}
+
+/**
+ *	JWT :: (string, string) -> JWT
+ *
+ *	Constructs a JWT that uses the specified
+ *	private and public keys for signing and verification
+ *	(unless HMACs are used, in which case only the private
+ *	key is used).
+ */
+module.exports = function(privateKey, publicKey) {
+	return new JWT(privateKey, publicKey);
+}
+
+module.exports.encode = encode;
+module.exports.decode = decode;

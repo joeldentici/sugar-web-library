@@ -1,3 +1,6 @@
+const monadic = require('monadic-js');
+monadic.loadDo('.ejs');
+
 /**
  *	Sugar
  *	written by Joel Dentici

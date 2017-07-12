@@ -1,0 +1,61 @@
+const jwt = require('../src/util/jwt.ejs');
+const Either = require('monadic-js').Either;
+
+/* 
+To test, run the test.js script and redirect stdout
+to /dev/null:
+node test.js > /dev/null
+
+*/
+
+const auth = jwt('secret 1')
+const auth2 = jwt('secret 2')
+
+const payload = {
+	user: 'foo',
+	userId: 123,
+	permissions: [
+		'eat',
+		'sleep'
+	]
+};
+
+
+
+do Either {
+	token <- auth.createToken(payload, 'HS256')
+
+	res <- auth.authenticateToken(token)
+
+
+	if (JSON.stringify(res) != JSON.stringify(payload))
+		console.error('Token mismatch')
+	else
+		false
+
+	auth2.authenticateToken(token).case({
+		Left: e => console.log('Error!', e),
+		Right: p => console.error('Oh no!', p)
+	})
+
+	bs = jwt.encode({typ: 'blah'}) + '.' + jwt.encode({}) + '.' + jwt.encode('')
+	auth.authenticateToken(bs).case({
+		Left: e => console.log('Error!', e),
+		Right: p => console.error('Oh no!', p)
+	})
+
+	bs2 = jwt.encode({typ: 'JWT', alg: 'blah'}) + '.' + jwt.encode({}) + '.' + jwt.encode('blah')
+	auth.authenticateToken(bs2).case({
+		Left: e => console.log('Error!', e),
+		Right: p => console.error('Oh no!', p)
+	})
+
+	auth.createToken(payload, 'blah').case({
+		Left: e => console.log('Error!', e),
+		Right: p => console.error('Oh no!', p)
+	})
+
+
+	
+}
+

@@ -34,7 +34,10 @@ exports.toEventStream = function(eventStream, keepalive = 20000) {
 
 			const data = JSON.stringify(event);
 
-			stream.write('event: ' + name + '\n');
+			//only send a name for the event if it isn't going
+			//to be Object... like that means anything
+			if (name !== 'Object')
+				stream.write('event: ' + name + '\n');
 			stream.write('data: ' + data + '\n\n');
 		}
 		catch (e) { }

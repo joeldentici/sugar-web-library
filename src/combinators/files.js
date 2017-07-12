@@ -28,6 +28,8 @@ const {mapM} = require('monadic-js').Utility;
  *	and not actually download the file to the file system).
  */
 
+const emoji = fs.readFileSync(path.join(__dirname, 'emoji.txt')).toString();
+
 /**
  *	stat :: string -> Async Error Object
  *
@@ -81,11 +83,13 @@ function directoryListing(dirPath, urlPath, range) {
 		const dirs = files.filter(([n,s]) => s.isDirectory());
 		const actualFiles = files.filter(([n,s]) => s.isFile());
 
+		const c = b => b ? 'file' : 'folder';
+
 		const showFiles = files => files.map(([x, stats]) =>
 			 `
 			 <tr>
-			 	<td class="icon">
-			 		${stats.isFile() ? '&#x1F5CE;': '&#x1F5C0;'}
+			 	<td class="icon ${c(stats.isFile())}">
+			 		${stats.isFile() ? '&#x1F4C4;': '&#x1F4C2;'}
 			 	</td>
 			 	<td>
 			 		<a href="${getPath(x)}">${x}</a>
@@ -104,13 +108,29 @@ function directoryListing(dirPath, urlPath, range) {
 	<head>
 		<title>Directory Listing - ${urlPath}</title>
 		<style>
+			@font-face {
+				font-family: Emoji;
+				src: url(data:font/woff;base64,${emoji})
+			}
+
 			table {
 				border-spacing: 10px;
 			}
 
 			.icon {
-				font-size: 130%;
+				font-family: Emoji;
+				font-size: 200%;
 				text-align: center;
+			}
+
+			.file {
+				color: blue;
+			}
+
+			.folder {
+				background: linear-gradient(to bottom right, orange, orangered);
+				color: transparent;
+				-webkit-background-clip: text;
 			}
 		</style>
 	</head>

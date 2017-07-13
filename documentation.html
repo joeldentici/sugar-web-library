@@ -181,6 +181,57 @@
 	
 		<div class="module-header">
 			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.CQRS">Sugar.Combinators.CQRS</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.IWriteService">
+					<b>IWriteService</b>
+				</a> <b>::</b> Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.IAuthService">
+					<b>IAuthService</b>
+				</a> <b>::</b> Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.IQueryService">
+					<b>IQueryService</b>
+				</a> <b>::</b> Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.IErrorMapper">
+					<b>IErrorMapper</b>
+				</a> <b>::</b> e &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.writeService">
+					<b>writeService</b>
+				</a> <b>::</b> (string, string, string) &#8594; (string, IWriteService, IErrorMapper) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.authService">
+					<b>authService</b>
+				</a> <b>::</b> (string, string, string) &#8594; (string, IAuthService, IErrorMapper, int) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.queryService">
+					<b>queryService</b>
+				</a> <b>::</b> (string, string, string) &#8594; (string, IQueryService, IErrorMapper) &#8594; WebPart
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
 			Module: <a href="#doc.module.Sugar.Combinators.Authentication">Sugar.Combinators.Authentication</a>
 			</div>
 			<ul class="module-functions">
@@ -201,6 +252,18 @@
 				<a href="#doc.module.Sugar.Combinators.Authentication.func.authenticateBasic">
 					<b>authenticateBasic</b>
 				</a> <b>::</b> (string &#8594; string &#8594; bool) &#8594; WebPart &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Authentication.func.IBlackList">
+					<b>IBlackList</b>
+				</a> <b>::</b> Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Authentication.func.authenticateJWT">
+					<b>authenticateJWT</b>
+				</a> <b>::</b> (string, string, string, IBlackList) &#8594; WebPart &#8594; WebPart
 			</li>
 		
 			</ul>
@@ -240,6 +303,21 @@
 				<a href="#doc.module.Sugar.Combinators.Compression.func.compressStream">
 					<b>compressStream</b>
 				</a> <b>::</b> string &#8594; ReadableStream &#8594; ReadableStream
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Combinators.Events">Sugar.Combinators.Events</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Combinators.Events.func.toEventStream">
+					<b>toEventStream</b>
+				</a> <b>::</b> Observable a &#8594; WebPart
 			</li>
 		
 			</ul>
@@ -746,7 +824,13 @@
 			<li>
 				<a href="#doc.module.Sugar.Server.func.getFormParser">
 					<b>getFormParser</b>
-				</a> <b>::</b> string &#8594; Buffer &#8594; Map string string
+				</a> <b>::</b> string &#8594; Buffer &#8594; Map string (string | FileUpload)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.parseForm">
+					<b>parseForm</b>
+				</a> <b>::</b> NodeHttpRequest &#8594; Promise (Map string (string | FileUpload))
 			</li>
 		
 			<li>
@@ -782,13 +866,76 @@
 			<li>
 				<a href="#doc.module.Sugar.Server.func.startWebServer">
 					<b>startWebServer</b>
-				</a> <b>::</b> Object &#8594; WebPart &#8594; HttpServer
+				</a> <b>::</b> (Object, WebPart, int) &#8594; HttpServer
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Server.func.defaultConfig">
 					<b>defaultConfig</b>
 				</a> <b>::</b> () &#8594; Object
+			</li>
+		
+			</ul>
+		</div>
+	
+		<div class="module-header">
+			<div class="module-name">
+			Module: <a href="#doc.module.Sugar.Utility.JWT">Sugar.Utility.JWT</a>
+			</div>
+			<ul class="module-functions">
+				
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.new">
+					<b>new</b>
+				</a> <b>::</b> (string, string) &#8594; JWT
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.createToken">
+					<b>createToken</b>
+				</a> <b>::</b> JWT &#8594; (Object, string) &#8594; Either Error string
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.authenticateToken">
+					<b>authenticateToken</b>
+				</a> <b>::</b> JWT &#8594; (string, string) &#8594; Either Error Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.AuthError">
+					<b>AuthError</b>
+				</a> <b>::</b> string &#8594; AuthenticationError
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.algs">
+					<b>algs</b>
+				</a> <b>::</b> Map string ((string, string) &#8594; JWTAlgorithm)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.hmacsha">
+					<b>hmacsha</b>
+				</a> <b>::</b> int &#8594; (string, string) &#8594; JWTAlgorithm
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.encode">
+					<b>encode</b>
+				</a> <b>::</b> Object &#8594; string
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.decode">
+					<b>decode</b>
+				</a> <b>::</b> string &#8594; Either Error Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Utility.JWT.func.JWT">
+					<b>JWT</b>
+				</a> <b>::</b> (string, string) &#8594; JWT
 			</li>
 		
 			</ul>
@@ -903,6 +1050,150 @@ See asyncRequest
 			</div>
 		</div>
 	
+		<div class="module-description" id="doc.module.Sugar.Combinators.CQRS">
+			<div class="module-name">
+				Module: Sugar.Combinators.CQRS
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 7/13/2017
+			</div>
+			<div class="module-desc">
+			This module provides combinators for creating
+CQRS applications and services.<br><br>These combinators take objects that fulfill an
+interface for some service type and return WebParts
+that expose those services over HTTP. They also perform
+authentication of user details associated with the request,
+using JWT.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.IWriteService">
+				<div class="function-name">
+					<b>IWriteService</b> <b>::</b> Object
+				</div>
+				<div class="function-desc">
+					
+An IWriteService is an object with an <code>execute</code>
+method, which takes two object arguments. The first is
+the command to run and the second is the user payload.<br><br>The <code>execute</code> method returns an Async e a
+where e is a type handled by the IErrorMapper and a is
+a type that can be JSON serialized.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.IAuthService">
+				<div class="function-name">
+					<b>IAuthService</b> <b>::</b> Object
+				</div>
+				<div class="function-desc">
+					
+An IAuthService is an object with an <code>authenticate</code>
+method, which takes a single object argument. The service uses
+this to authenticate a user.<br><br>This method returns an <code>Async e a</code> where <code>e</code>
+is the type handled by an IErrorMapper and <code>a</code> is the
+type for whatever claims you intend to pass back to a client and
+use for authorization at a later time.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.IQueryService">
+				<div class="function-name">
+					<b>IQueryService</b> <b>::</b> Object
+				</div>
+				<div class="function-desc">
+					
+An IQueryService is an object with an <code>query</code> method,
+which takes a two object arguments. The first specifies the arguments
+for the query and the second contains the details of the user's token,
+or is undefined if authentication is not being used.<br><br>The method returns an <code>Async e a</code> where <code>e</code>
+is the type handled by an IErrorMapper and <code>a</code> is the
+type for a successful result. The WebPart combinator queryService
+performs some special handling on a non-error result:<br><br>If the result is a file, we send it using the File combinators
+If the result is a event stream (observable), we send it using the Event combinators
+Otherwise the result is a type that can be JSON serialized, and we send it
+in a normal OK 200 response with the application/json content-type
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.IErrorMapper">
+				<div class="function-name">
+					<b>IErrorMapper</b> <b>::</b> e &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+An IErrorMapper is a function that takes
+an error and returns a WebPart. It should case the error on
+the expected errors to determine what WebPart to construct.<br><br>You may use whatever content-type you want for your error handler
+WebParts, but you may make it more difficult to implement client
+applications if you use different types.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.writeService">
+				<div class="function-name">
+					<b>writeService</b> <b>::</b> (string, string, string) &#8594; (string, IWriteService, IErrorMapper) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Constructs a combinator that wraps services in a WebPart.<br><br>This constructor takes a tuple of private key, public key,
+and algorithm to be used for JWT authentication. The returned
+combinator takes a path, IWriteService and IErrorMapper.<br><br>The resulting WebPart after applying the combinator will filter
+out non-POST method requests that don't match the path for the
+service, as well as any requests that cannot be authenticated. It
+is of course up to the service to authorize commands before processing
+them.<br><br>The result of a successful command will be a JSON encoded value in a 200 OK
+response. The result of a failed command depends on what the provided error
+mapper does to handle it.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.authService">
+				<div class="function-name">
+					<b>authService</b> <b>::</b> (string, string, string) &#8594; (string, IAuthService, IErrorMapper, int) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Constructs a combinator for creating a specialized service that authenticates
+user credentials. This function works exactly like writeService, but works with
+an IAuthService (which can also be an IWriteService).<br><br>The request must match the specified path and must be a POST request. The error
+mapper is used to map errors to WebParts. The integer argument specifies the amount
+of time in milliseconds after which the token will expire.<br><br>NOTE: This is not for the service that provides user account management. Although
+you can use the same JavaScript service object (ie, it implements IAuthService and
+one or more of IWriteService, IQueryService) to provide that functionality as the one
+you use for authentication, you must construct additional writeService and readService
+WebParts to hook it into Sugar.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.queryService">
+				<div class="function-name">
+					<b>queryService</b> <b>::</b> (string, string, string) &#8594; (string, IQueryService, IErrorMapper) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Constructs a combinator that wraps IQueryServices into WebParts.<br><br>If the crypto information is undefined, then no authentication is used on the
+returned WebParts. Just like in writeService, it is up to the IQueryService to
+perform authorization on protected queries.<br><br>GET and HEAD requests at the specified path will be allowed through.<br><br>The result of the IQueryService will be mapped into a WebPart as follows
+Errors go through the specified IErrorMapper
+Files get downloaded
+Event streams/Observables get turned into server-sent events
+Anything else gets serialized to JSON and sent as 200 OK.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
 		<div class="module-description" id="doc.module.Sugar.Combinators.Authentication">
 			<div class="module-name">
 				Module: Sugar.Combinators.Authentication
@@ -956,6 +1247,36 @@ authentication challenge.
 					
 See authenticateBasicAsync. This is the same thing but for a validation
 function that is not asynchronous.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Authentication.func.IBlackList">
+				<div class="function-name">
+					<b>IBlackList</b> <b>::</b> Object
+				</div>
+				<div class="function-desc">
+					
+An IBlackList is an object with a <code>check</code>
+method that takes the payload of a JWT and returns an
+<code>Async e ()</code>.<br><br>If the returned <code>Async e ()</code> is an error,
+then we should forbid the request, even though we issued
+the token originally.<br><br>The black list that is used should be stored in a quick
+access way (such as in process or in an in memory data store).
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Authentication.func.authenticateJWT">
+				<div class="function-name">
+					<b>authenticateJWT</b> <b>::</b> (string, string, string, IBlackList) &#8594; WebPart &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Constructs a WebPart that uses the JWT library to authenticate
+the Authorization header. If the token is authenticated, the
+payload is placed on the HttpContext as userToken.<br><br>If authentication succeeds, the specified WebPart is ran,
+otherwise an appropriate error WebPart is ran.
 				</div>
 			</div>
 		
@@ -1033,6 +1354,40 @@ requestor supports it.
 					
 Compresses the provided stream with the compression
 algorithm for the provided encoding.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Combinators.Events">
+			<div class="module-name">
+				Module: Sugar.Combinators.Events
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 7/13/2017
+			</div>
+			<div class="module-desc">
+			This module provides combinators to turn
+JavaScript event streams (Rx Observables)
+into HTTP event streams.<br><br>Responses from these combinators use the
+server-sent events specification.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.Events.func.toEventStream">
+				<div class="function-name">
+					<b>toEventStream</b> <b>::</b> Observable a &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Creates a WebPart that subscribes to the observable
+and emits its events using server-sent events.<br><br>This should be used for each request that wants an
+event stream.
 				</div>
 			</div>
 		
@@ -2070,13 +2425,26 @@ the URI query string parser.
 			<div class="function-description"
 			id="doc.module.Sugar.Server.func.getFormParser">
 				<div class="function-name">
-					<b>getFormParser</b> <b>::</b> string &#8594; Buffer &#8594; Map string string
+					<b>getFormParser</b> <b>::</b> string &#8594; Buffer &#8594; Map string (string | FileUpload)
 				</div>
 				<div class="function-desc">
 					
 Gets a form parser for a content type. If no
 parser is defined for the content type, then a parser
 that returns an empty form is returned.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.parseForm">
+				<div class="function-name">
+					<b>parseForm</b> <b>::</b> NodeHttpRequest &#8594; Promise (Map string (string | FileUpload))
+				</div>
+				<div class="function-desc">
+					
+Parses the request body to get the form. If there is no
+parser for the content type of the request, then no request
+data is read and the form is undefined.
 				</div>
 			</div>
 		
@@ -2144,12 +2512,16 @@ Adds the server response header.
 			<div class="function-description"
 			id="doc.module.Sugar.Server.func.startWebServer">
 				<div class="function-name">
-					<b>startWebServer</b> <b>::</b> Object &#8594; WebPart &#8594; HttpServer
+					<b>startWebServer</b> <b>::</b> (Object, WebPart, int) &#8594; HttpServer
 				</div>
 				<div class="function-desc">
 					
 Runs a web server that processes each request
-through the specified Web Part.
+through the specified Web Part.<br><br>The verbosity levels cause logging as follows:
+0 - No logging
+1 - Logging when server starts listening and when an error occurs
+2 - Logging of requests + Level 1
+3 - Level 2 + Logging of HttpContext before and after processing
 				</div>
 			</div>
 		
@@ -2164,6 +2536,134 @@ A constant function that returns the default Sugar
 application configuration object. The returned object
 can be modified before being passed to startWebServer to
 change properties of the web server.
+				</div>
+			</div>
+		
+			</div>
+		</div>
+	
+		<div class="module-description" id="doc.module.Sugar.Utility.JWT">
+			<div class="module-name">
+				Module: Sugar.Utility.JWT
+			</div>
+			<div class="module-author">
+			<b>Written By:</b> Joel Dentici
+			</div>
+			<div class="module-date">
+			<b>Written On:</b> 7/12/2017
+			</div>
+			<div class="module-desc">
+			Provides an implementation of JSON Web
+Tokens.
+			</div>
+			<div class="module-functions">
+				
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.new">
+				<div class="function-name">
+					<b>new</b> <b>::</b> (string, string) &#8594; JWT
+				</div>
+				<div class="function-desc">
+					
+Constructs a JWT
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.createToken">
+				<div class="function-name">
+					<b>createToken</b> <b>::</b> JWT &#8594; (Object, string) &#8594; Either Error string
+				</div>
+				<div class="function-desc">
+					
+Creates a JSON web token. If successful, the JWT is returned
+as a '.' separated base64 string that can be passed to
+authenticateToken.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.authenticateToken">
+				<div class="function-name">
+					<b>authenticateToken</b> <b>::</b> JWT &#8594; (string, string) &#8594; Either Error Object
+				</div>
+				<div class="function-desc">
+					
+Verifies that the provided JSON web token was signed by
+our key.<br><br>If verification succeeds, the payload portion of the token
+is returned. Otherwise, an error is returned.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.AuthError">
+				<div class="function-name">
+					<b>AuthError</b> <b>::</b> string &#8594; AuthenticationError
+				</div>
+				<div class="function-desc">
+					
+Creates an authentication error with the
+specified reason for failing.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.algs">
+				<div class="function-name">
+					<b>algs</b> <b>::</b> Map string ((string, string) &#8594; JWTAlgorithm)
+				</div>
+				<div class="function-desc">
+					
+Constructors for the cryptographic algorithms used by JWT
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.hmacsha">
+				<div class="function-name">
+					<b>hmacsha</b> <b>::</b> int &#8594; (string, string) &#8594; JWTAlgorithm
+				</div>
+				<div class="function-desc">
+					
+Constructs an HMAC SHA-bits JWTAlgorithm.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.encode">
+				<div class="function-name">
+					<b>encode</b> <b>::</b> Object &#8594; string
+				</div>
+				<div class="function-desc">
+					
+Encodes a JavaScript object to a
+base64 string.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.decode">
+				<div class="function-name">
+					<b>decode</b> <b>::</b> string &#8594; Either Error Object
+				</div>
+				<div class="function-desc">
+					
+Decodes a base64 string to a JavaScript
+object.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Utility.JWT.func.JWT">
+				<div class="function-name">
+					<b>JWT</b> <b>::</b> (string, string) &#8594; JWT
+				</div>
+				<div class="function-desc">
+					
+Constructs a JWT that uses the specified
+private and public keys for signing and verification
+(unless HMACs are used, in which case only the private
+key is used).
 				</div>
 			</div>
 		
@@ -2223,7 +2723,7 @@ components, and parses the query string.
 			</div>
 
 			<div class="footer">
-			This documentation was generated by <code>hmdoc</code> on <code>6/28/2017, 10:35:29 PM</code>
+			This documentation was generated by <code>hmdoc</code> on <code>7/12/2017, 10:02:09 PM</code>
 			</div>
 		</body>
 	</html>

@@ -1,0 +1,247 @@
+
+/**
+ *	Sugar.Combinators.CQRS
+ *	written by Joel Dentici
+ *	on 7/13/2017
+ *
+ *	This module provides combinators for creating
+ *	CQRS applications and services.
+ *
+ *	These combinators take objects that fulfill an
+ *	interface for some service type and return WebParts
+ *	that expose those services over HTTP. They also perform
+ *	authentication of user details associated with the request,
+ *	using JWT.
+ */
+
+/**
+ *	IWriteService :: Object
+ *
+ *	An IWriteService is an object with an <code>execute</code>
+ *	method, which takes two object arguments. The first is
+ *	the command to run and the second is the user payload.
+ *
+ *	The <code>execute</code> method returns an Async e a
+ *	where e is a type handled by the IErrorMapper and a is
+ *	a type that can be JSON serialized.
+ */
+
+/**
+ *	IAuthService :: Object
+ *
+ *	An IAuthService is an object with an <code>authenticate</code>
+ *	method, which takes a single object argument. The service uses
+ *	this to authenticate a user.
+ *
+ *	This method returns an <code>Async e a</code> where <code>e</code>
+ *	is the type handled by an IErrorMapper and <code>a</code> is the
+ *	type for whatever claims you intend to pass back to a client and
+ *	use for authorization at a later time.
+ */
+
+/**
+ *	IQueryService :: Object
+ *
+ *	An IQueryService is an object with an <code>query</code> method,
+ *	which takes a two object arguments. The first specifies the arguments
+ *	for the query and the second contains the details of the user's token,
+ *	or is undefined if authentication is not being used.
+ *
+ *	The method returns an <code>Async e a</code> where <code>e</code>
+ *	is the type handled by an IErrorMapper and <code>a</code> is the
+ *	type for a successful result. The WebPart combinator queryService
+ *	performs some special handling on a non-error result:
+ *
+ *		If the result is a file, we send it using the File combinators
+ *		If the result is a event stream (observable), we send it using the Event combinators
+ *		Otherwise the result is a type that can be JSON serialized, and we send it
+ *		in a normal OK 200 response with the application/json content-type
+ */
+
+/**
+ *	IErrorMapper :: e -> WebPart
+ *
+ *	An IErrorMapper is a function that takes
+ *	an error and returns a WebPart. It should case the error on
+ *	the expected errors to determine what WebPart to construct.
+ *
+ *	You may use whatever content-type you want for your error handler
+ *	WebParts, but you may make it more difficult to implement client
+ *	applications if you use different types.
+ */
+
+/**
+ *	writeService :: (string, string, string) -> (string, IWriteService, IErrorMapper) -> WebPart
+ *
+ *	Constructs a combinator that wraps services in a WebPart.
+ *
+ *	This constructor takes a tuple of private key, public key,
+ *	and algorithm to be used for JWT authentication. The returned
+ *	combinator takes a path, IWriteService and IErrorMapper.
+ *
+ *	The resulting WebPart after applying the combinator will filter
+ *	out non-POST method requests that don't match the path for the
+ *	service, as well as any requests that cannot be authenticated. It
+ *	is of course up to the service to authorize commands before processing
+ *	them.
+ *
+ *	The result of a successful command will be a JSON encoded value in a 200 OK
+ *	response. The result of a failed command depends on what the provided error
+ *	mapper does to handle it.
+ */
+exports.writeService = function(privateKey, publicKey, alg) {
+	//load an authentication web part for the provided crypto information
+	const authenticate = A.authenticateJWT(privateKey, publicKey, alg);
+
+	//return function that will construct a WebPart for a specific service
+	return (path, service, errMapper) => {
+		//extracts command from HttpRequest and runs it on the service
+		function runCommand(context) {
+			//try running the command on the service
+			return Async.try(do Async {
+				command = context.request.form || context.request.body
+				userDetails = context.userToken
+
+				//result from executing the command
+				res <- service.execute(command, userDetails)
+
+				return OK(JSON.stringify(res)) >=> mime('application/json')
+			})
+			//map any errors that occur to WebParts
+			.catch(e => Async.of(errMapper(e)))
+			//execute the WebPart on the context
+			.chain(wp => wp(context));
+		}
+
+		//filter out requests that are not POST method or are for
+		//a different url, as well as any that we cannot authenticate
+		return expr {
+			F.POST >=> F.path(path) >=> authenticate(runCommand)
+		};
+	}
+}
+
+/**
+ *	authService :: (string, string, string) -> (string, IAuthService, IErrorMapper, int) -> WebPart
+ *
+ *	Constructs a combinator for creating a specialized service that authenticates
+ *	user credentials. This function works exactly like writeService, but works with
+ *	an IAuthService (which can also be an IWriteService).
+ *
+ *	The request must match the specified path and must be a POST request. The error
+ *	mapper is used to map errors to WebParts. The integer argument specifies the amount
+ *	of time in milliseconds after which the token will expire.
+ *
+ *	NOTE: This is not for the service that provides user account management. Although
+ *	you can use the same JavaScript service object (ie, it implements IAuthService and
+ *	one or more of IWriteService, IQueryService) to provide that functionality as the one
+ *	you use for authentication, you must construct additional writeService and readService
+ *	WebParts to hook it into Sugar.
+ */
+exports.authService = function(privateKey, publicKey, alg) {
+	const auth = jwt(privateKey, publicKey, alg);
+
+	//the combinator which can be used to create different endpoints
+	//for different methods of authentication
+	return (path, service, errMapper, expiry) => {
+		//authenticates a user and sends them their token
+		function runAuthentication(context) {
+			return Async.try(do Async {
+				command = context.request.form
+				//authentication result from the service
+				res <- service.authenticate(command)
+
+				//assign expiration time and iat
+				payload = Object.assign({}, res {
+					iat: Date.now(),
+					exp: Date.now() + expiry
+				})
+
+				//create the JWT
+				auth.createToken(payload).case({
+					Left: e => Async.fail(e),
+					Right: token => return OK(token)
+				})
+			})
+			.catch(e => Async.of(errMapper(e)))
+			.chain(wp => wp(context));
+		}
+
+		//filter out bad requests and then run the authentication
+		//service and JWT creation on the rest
+		return expr {
+			F.POST >=> F.path(path) >=> runAuthentication
+		}
+	}
+}
+
+/**
+ *	queryService :: (string, string, string) -> (string, IQueryService, IErrorMapper) -> WebPart
+ *
+ *	Constructs a combinator that wraps IQueryServices into WebParts.
+ *
+ *	If the crypto information is undefined, then no authentication is used on the
+ *	returned WebParts. Just like in writeService, it is up to the IQueryService to
+ *	perform authorization on protected queries.
+ *
+ *	GET and HEAD requests at the specified path will be allowed through.
+ *
+ *	The result of the IQueryService will be mapped into a WebPart as follows
+ *		Errors go through the specified IErrorMapper
+ *		Files get downloaded
+ *		Event streams/Observables get turned into server-sent events
+ *		Anything else gets serialized to JSON and sent as 200 OK.
+ */
+exports.queryService = function(privateKey, publicKey, alg) {
+	//authentication WebPart or undefined
+	const authenticate = privateKey && publicKey && alg
+		&& A.authenticateJWT(privateKey, publicKey, alg);
+
+	//combinator to create query service endpoints
+	return (path, service, errMapper) => {
+		//responseToWebPart :: a -> WebPart
+		function responseToWebPart(response) {
+			//download files
+			if (typeof response === 'object'
+				&& response.size && response.stream
+				&& response.name) {
+				return Files.download(response);
+			}
+			//use server-sent events on event streams
+			else if (typeof response === 'object'
+				&& typeof response.subscribe === 'function') {
+				return Events.toEventStream(response);
+			}
+			//otherwise JSON serialize and use OK 200
+			else {
+				return expr {
+					OK(JSON.serialize(response)) >=> mime('application/json')
+				}
+			}
+		}
+
+		//runQuery :: WebPart
+		function runQuery(context) {
+			return Async.try(do Async {
+				query = context.request.query
+				userDetails = context.userToken
+
+				res <- service.query(query, userDetails)
+
+				return responseToWebPart(res)
+			})
+			.catch(e => Async.of(errMapper(e)))
+			.chain(wp => wp(context));
+		}
+
+		//filter out bad requests and then run queries after
+		//optional authentication
+		return expr {
+			F.GET <|> F.HEAD >=> F.path(path) >=>
+				if (authenticate)
+					authenticate(runQuery)
+				else
+					runQuery
+		}
+	}
+}

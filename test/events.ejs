@@ -7,6 +7,7 @@ const {OK} = Sugar.Combinators.Successful;
 const {request} = Sugar;
 const {compress} = Sugar.Combinators.Compression;
 const {mime} = Sugar.Combinators.Output;
+const {browse} = Sugar.Combinators.Files;
 const Async = require('monadic-js').Async;
 const Rx = require('rx');
 
@@ -67,7 +68,7 @@ const events = expr {
 	GET >=> 
 		path('/timeEvents') 
 			>=> request(timeEvents)
-}
+};
 
 //web part for loading the document
 const time = expr {
@@ -76,7 +77,7 @@ const time = expr {
 			>=> OK(doc) 
 			>=> mime('text/html') 
 			>=> compress
-}
+};
 
 //web part when an error occurs
 const err = NOT_FOUND('Could not locate requested resource!');
@@ -84,8 +85,8 @@ const err = NOT_FOUND('Could not locate requested resource!');
 //test app just serves whichever of the three
 //web parts gets matched first
 const app = expr {
-	events <|> time <|> err
-}
+	events <|> time <|> browse('../') <|> err
+};
 
 //test on console
 function test() {

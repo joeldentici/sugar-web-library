@@ -56,7 +56,7 @@ function getFormParser(contentType) {
  *
  *	Parses the request body to get the form. If there is no
  *	parser for the content type of the request, then no request
- *	data is read and an empty form is returned.
+ *	data is read and the form is undefined.
  */
 function parseForm(req) {
 	const contentType = req.headers['content-type'];
@@ -65,7 +65,7 @@ function parseForm(req) {
 			.then(getFormParser(contentType));
 	}
 	else {
-		return Promise.resolve({});
+		return Promise.resolve(undefined);
 	}
 }
 
@@ -216,8 +216,12 @@ function startWebServer(config, app, verbose = 0) {
 				x.response.content.on('end', () => verbose > 1 && console.log(
 					`Response sent for request ${id}`));
 
-				//output the content to the response
-				content.pipe(res);
+				if (x.request.headers['content-type'] !== 'HEAD')
+					//output the content to the response
+					content.pipe(res);
+				else
+					//end the response: HEAD requires no content be sent
+					res.end();
 
 			})
 			.catch(x => {

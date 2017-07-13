@@ -18,12 +18,14 @@ class JWT {
 	 *
 	 *	Constructs a JWT
 	 */
-	constructor(privateKey, publicKey) {
+	constructor(privateKey, publicKey, iatGrace = 5000) {
 		this.algs = Object.keys(algs)
 			.reduce((acc, k) => {
 				acc[k] = algs[k](privateKey, publicKey);
 				return acc;
 			}, {});
+
+		this.iatGrace = iatGrace;
 	}
 
 	/**
@@ -86,6 +88,15 @@ class JWT {
 			algMismatch = AuthError("The token's algorithm does not " +
 				"match the expected algorithm")
 			do! when(header.alg != alg, Either.Left(algMismatch))
+
+			//make sure the token has not expired
+			expired = AuthError('The token has expired')
+			do! when(payload.exp < Date.now(), Either.Left(expired))
+
+			//and make sure the iat already happened, otherwise we might
+			//have clocking issues if we are running multiple servers
+			notIssued = AuthError('IAT failure: The token was issued in the future!')
+			do! when(payload.iat > Date.now() + this.iatGrace, Either.Left(notIssued))
 
 			//sign the header and payload and verify
 			//it matches the MAC on the token

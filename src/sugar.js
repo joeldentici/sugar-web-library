@@ -119,7 +119,7 @@ exports.Server = require('./server/index.js');
 exports.Combinators = {
 	Authentication: require('./combinators/authentication.js'),
 	Compression: require('./combinators/compression.js'),
-	CQRS: require('./combinators/cqrs.js'),
+	CQRS: require('./combinators/cqrs.ejs'),
 	Events: require('./combinators/events.js'),
 	Files: require('./combinators/files.js'),
 	Filters: require('./combinators/filters.js'),

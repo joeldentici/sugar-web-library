@@ -174,7 +174,7 @@ function addServer(request) {
  *	through the specified Web Part.
  *
  *	The verbosity levels cause logging as follows:
- *		0 - No logging
+ *		0 - Log errors that the application fails to handle or server fails to handle
  *		1 - Logging when server starts listening and when an error occurs
  *		2 - Logging of requests + Level 1
  *		3 - Level 2 + Logging of HttpContext before and after processing
@@ -190,17 +190,26 @@ function startWebServer(config, app, verbose = 0) {
 		const id = reqID++;
 		verbose > 1 && console.log(`Accepted request ${id}, Processing...`);
 
-		//create context for the request
-		createContext(req, res, config)
-			.map(x => {
+		let loggedUserError = false;
+
+		//run the app on the request
+		Async.run(createContext(req, res, config)
+			.tap(x => {
 				verbose > 2 && console.log(`Input HttpContext for ${id}`, x);
-				return x;
 			})
-			.chain(x => app(x)) //then run it through the application
-			.map(x => {				
+			.chain(x => 
+				app(x).tapFail(e => {
+					console.error("You didn't handle this error: ", e);
+					loggedUserError = true;
+				})
+			) //then run it through the application
+			.tap(x => {				
 				verbose > 1 && console.log(`Request ${id} processed, sending response`);
 				verbose > 2 && console.log(`Output HttpContext for ${id}`, x);
-
+				verbose > 1 && x.response.content.on('end', () => console.log(
+					`Response sent for request ${id}`));
+			})
+			.tap(x => {
 				//write the response headers and status
 				res.writeHead(x.response.status, x.response.headers);
 
@@ -214,26 +223,23 @@ function startWebServer(config, app, verbose = 0) {
 				//be cleaned up ASAP
 				req.on('close', () => x.response.content.end());
 
-				x.response.content.on('end', () => verbose > 1 && console.log(
-					`Response sent for request ${id}`));
-
 				if (x.request.method !== 'HEAD')
 					//output the content to the response
 					content.pipe(res);
 				else
 					//end the response: HEAD requires no content be sent
 					res.end();
-
 			})
-			.catch(x => {
+			.tapFail(e => {
 				//log any error that propagated all the way up here
-				verbose && console.error("A serious error occurred", x);
+				if (!loggedUserError)
+					console.error("Sugar failed to handle this error: ", e);
 				//clearly we can't do anything about this error so
 				//we should respond with an internal server error
-				res.writeHead(500, headers({'Content-Type': 'text/plain'}));
+				res.writeHead(500, {'Content-Type': 'text/plain'});
 				res.end("An internal server error occurred");
 			})
-			.fork(x => x, e => e);
+		);
 	}
 
 	//create the appropriate type of http server

@@ -53,9 +53,16 @@ HttpResponse = {
 	content: ReadableStream
 }
 
+HttpRuntime {
+	https: bool,
+	port: int,
+	mime: Map string string
+}
+
 HttpContext = {
 	request: HttpRequest,
-	response: HttpResponse
+	response: HttpResponse,
+	runtime: HttpRuntime
 }
 
 

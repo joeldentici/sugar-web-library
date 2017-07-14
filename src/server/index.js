@@ -273,6 +273,7 @@ exports.defaultConfig = function() {
 			'.js': 'application/javascript',
 			'.html': 'text/html',
 			'.htm': 'text/html',
+			'.txt': 'text/plain',
 		}
 	};
 }

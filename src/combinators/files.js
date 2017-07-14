@@ -91,7 +91,7 @@ function directoryListing(dirPath, urlPath, range) {
 			 	<td class="icon ${c(stats.isFile())}">
 			 		${stats.isFile() ? '&#x1F4C4;': '&#x1F4C2;'}
 			 	</td>
-			 	<td>
+			 	<td class="name">
 			 		<a href="${getPath(x)}">${x}</a>
 			 	</td>
 			 	<td>
@@ -102,6 +102,12 @@ function directoryListing(dirPath, urlPath, range) {
 			 	</td>
 			 </tr>
 			 `).join('\n\t\t\t');
+
+		const gradient = (start, end) => `
+			background: linear-gradient(to bottom right, ${start}, ${end});
+			color: transparent;
+			-webkit-background-clip: text;
+		`;
 
 		const output = `<!DOCTYPE html>
 <html>
@@ -117,20 +123,22 @@ function directoryListing(dirPath, urlPath, range) {
 				border-spacing: 10px;
 			}
 
-			.icon {
+			td.name {
+				text-align: center;
+			}
+
+			td.icon {
 				font-family: Emoji;
 				font-size: 200%;
 				text-align: center;
 			}
 
-			.file {
-				color: blue;
+			td.icon.file {
+				${gradient('darkblue', 'skyblue')}
 			}
 
-			.folder {
-				background: linear-gradient(to bottom right, orange, orangered);
-				color: transparent;
-				-webkit-background-clip: text;
+			td.icon.folder {
+				${gradient('orangered', 'orange')}
 			}
 		</style>
 	</head>

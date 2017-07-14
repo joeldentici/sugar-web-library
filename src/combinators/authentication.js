@@ -89,7 +89,7 @@ exports.authenticateBasic = function(test, part) {
  */
 
 /**
- *	authenticateJWT :: (string, string, string, IBlackList) -> WebPart -> WebPart
+ *	authenticateJWT :: (string, string, string, IBlackList) -> (WebPart, (Error -> WebPart)?) -> WebPart
  *
  *	Constructs a WebPart that uses the JWT library to authenticate
  *	the Authorization header. If the token is authenticated, the
@@ -105,7 +105,9 @@ exports.authenticateJWT = function(privateKey, publicKey, alg, blacklist) {
 
 	blacklist = blacklist || {check: Async.of};
 
-	return part => context => {
+	return (part, errMapper) => context => {
+		errMapper = errMapper || (e => FORBIDDEN(JSON.stringify(e.message)));
+
 		const token = (context
 			.request
 			.headers['authorization'] || '')
@@ -113,13 +115,14 @@ exports.authenticateJWT = function(privateKey, publicKey, alg, blacklist) {
 
 		//no sense in attempting authentication on an empty token
 		if (!token) {
-			return FORBIDDEN('You must authenticate to use this resource')(context);
+			return errMapper(jwt.AuthenticationError(
+				'You must authenticate to use this resource'))(context);
 		}
 
 		//authenticate the token
 		return auth.authenticateToken(token, alg).case({
 			//the token is invalid, forbid the request
-			Left: e => FORBIDDEN(e.message)(context),
+			Left: e => errMapper(e)(context),
 			//token is valid, so now we need to make sure
 			//it isn't blacklisted
 			Right: payload => {
@@ -131,7 +134,7 @@ exports.authenticateJWT = function(privateKey, publicKey, alg, blacklist) {
 						userToken: payload
 					})))
 				//the token is blacklisted, forbid the request
-				).catch(e => FORBIDDEN(e.message)(context));
+				).catch(e => errMapper(e)(context));
 			}
 		});
 	}

@@ -88,7 +88,7 @@ function getRawForm(req) {
  *
  *	Performs further processing on the incoming node HTTP Request
  *	before mapping it to a Sugar HTTP Request and returning it in
- *	a Promise.
+ *	a Async.
  */
 function parseRequest(req) {
 	//parse the request body to get form

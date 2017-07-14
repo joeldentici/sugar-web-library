@@ -17,10 +17,9 @@ const Async = require('monadic-js').Async;
  *	web part does not complete processing in the specified
  *	timespan (milliseconds).
  *
- *	Due to the way that Promises work, the provided WebPart
- *	processing will not be cancelled, but its result will be
- *	discarded and the returned WebPart is guaranteed to complete
- *	within the provided timespan.
+ *	The provided WebPart will not be cancelled as it will
+ *	have already started processing. Typically you shouldn't
+ *	use this anyway and your timeouts should happen in your code.
  */
 exports.timeout = function(timespan, part) {
 	return function(context) {

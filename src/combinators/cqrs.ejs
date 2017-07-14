@@ -1,11 +1,14 @@
 const Files = require('./files.js');
 const F = require('./filters.js');
 const {OK} = require('./successful.js');
+const {FORBIDDEN} = require('./requesterrors.js');
+const {INTERNAL_ERROR} = require('./servererrors.js');
 const Events = require('./events.js');
 const A = require('./authentication.js');
 const jwt = require('../util/jwt.ejs');
 const {mime} = require('./output.js');
 const Async = require('monadic-js').Async;
+const {caseOf} = require('js-helpers');
 
 /**
  *	Sugar.Combinators.CQRS
@@ -79,7 +82,71 @@ const Async = require('monadic-js').Async;
  */
 
 /**
- *	writeService :: (string, string, string, IBlackList) -> (string, IWriteService, IErrorMapper) -> WebPart
+ *	IResultMapper :: r -> WebPart
+ *
+ *	Like IErrorMapper, but for actual results.
+ */
+
+/**
+ *	CryptoInformation :: (string, string, string, IBlackList?)
+ *
+ *	Crypto information is used to construct an authentication
+ *	WebPart combinator.
+ */
+
+/**
+ *	AuthInformation :: (string, string, string)
+ *
+ *	Auth information is used to construct a JWT
+ */
+
+/**
+ *	IAuthenticator :: Object
+ *
+ *	An IAuthenticator is an Object with a <code>createToken</code>
+ *	method that takes a first argument of any type and
+ *	a second argument of expiration time (int). The result is an 
+ *	<code>Either AuthenticationError string</code>.
+ *
+ *	This should perform the opposite operation of whatever your
+ *	Authenticator performs.
+ */
+
+/**
+ *	Authenticator :: (WebPart, IErrorMapper) -> WebPart
+ *
+ *	A WebPart combinator that checks user credentials before
+ *	applying the WebPart it receives.
+ *
+ *	This should perform the opposite operation of whatever your
+ *	IAuthenticator performs.
+ */
+
+/**
+ *	ServiceInfo :: Object
+ *
+ *	Service info is a configuration object that specifies
+ *	the path (string), IWriteService | IAuthService | IQueryService,
+ *	an IErrorMapper, and a IResultMapper. The result mapper
+ *	and error mapper are optional. The default error mapper
+ *	will try your error mapper first, and on anything else
+ *	JSON serialize the error message. The default result mapper
+ *	behavior varies on combinator type.
+ *
+ *	properties: path, service, resultMapper, errorMapper
+ */
+
+/**
+ *	AuthServiceInfo :: Object
+ *
+ *	A configuration object with all the properties of ServiceInfo,
+ *	plus an integer expiration time
+ *
+ *	properties: path, service, resultMapper, errorMapper, expirationTime
+ */
+
+/**
+ *	writeService :: CryptoInformation | Authenticator -> ServiceInfo -> WebPart
  *
  *	Constructs a combinator that wraps services in a WebPart.
  *
@@ -99,10 +166,20 @@ const Async = require('monadic-js').Async;
  */
 exports.writeService = function(privateKey, publicKey, alg, blacklist) {
 	//load an authentication web part for the provided crypto information
-	const authenticate = A.authenticateJWT(privateKey, publicKey, alg, blacklist);
+	const authenticate = makeAuth(privateKey, publicKey, alg, blacklist);
 
 	//return function that will construct a WebPart for a specific service
-	return (path, service, errMapper) => {
+	return (serviceInfo) => {
+		const defaultResult = expr {n => x => n(x) || (
+			OK(JSON.stringify(x)) >=> mime('application/json')
+		)};
+
+		const {path, service, resultMapper, errorMapper} = commonChecks(
+			'writeService', 'IWriteService', 'execute', defaultResult,
+			serviceInfo
+		);
+
+
 		//extracts command from HttpRequest and runs it on the service
 		function runCommand(context) {
 			//try running the command on the service
@@ -113,10 +190,10 @@ exports.writeService = function(privateKey, publicKey, alg, blacklist) {
 				//result from executing the command
 				res <- service.execute(command, userDetails)
 
-				return OK(JSON.stringify(res)) >=> mime('application/json')
+				return resultMapper(res)
 			})
 			//map any errors that occur to WebParts
-			.catch(e => Async.of(errMapper(e)))
+			.catch(e => Async.of(errorMapper(e)))
 			//execute the WebPart on the context
 			.chain(wp => wp(context));
 		}
@@ -124,7 +201,11 @@ exports.writeService = function(privateKey, publicKey, alg, blacklist) {
 		//filter out requests that are not POST method or are for
 		//a different url, as well as any that we cannot authenticate
 		return expr {
-			F.POST >=> F.path(path) >=> authenticate(runCommand)
+			F.POST >=> F.path(path) >=> 
+			if (authenticate) 
+				authenticate(runCommand)
+			else
+				runCommand
 		};
 	}
 }
@@ -150,11 +231,33 @@ exports.writeService = function(privateKey, publicKey, alg, blacklist) {
  *	WebParts to hook it into Sugar.
  */
 exports.authService = function(privateKey, publicKey, alg) {
-	const auth = jwt(privateKey, publicKey, alg);
+	const auth = typeof privateKey === 'object' ? privateKey :
+		{
+			jwt: jwt(privateKey, publicKey),
+			createToken(payload, expire) {
+				return this.jwt.createToken(Object.assign({}, payload, {
+					iat: Date.now(),
+					exp: Date.now() + expiry
+				}), alg);
+			}
+		}
 
 	//the combinator which can be used to create different endpoints
 	//for different methods of authentication
-	return (path, service, errMapper, expiry) => {
+	return (serviceInfo) => {
+		//defaultResult :: (a -> WebPart) -> a -> WebPart
+		const defaultResult = expr { n => r => n(r) || (OK(r) >=> mime('text/plain')) };
+
+		const expiry = serviceInfo.expirationTime;
+
+		const {path, service, resultMapper, errorMapper} = commonChecks(
+			'authService', 'IAuthService', 'authenticate', defaultResult,
+			serviceInfo
+		);
+
+		if (typeof expiry !== 'number')
+			throw new Error('The expiration time for authService must be a number');
+
 		//authenticates a user and sends them their token
 		function runAuthentication(context) {
 			return Async.try(do Async {
@@ -168,13 +271,11 @@ exports.authService = function(privateKey, publicKey, alg) {
 					exp: Date.now() + expiry
 				})
 
-				//create the JWT
-				auth.createToken(payload).case({
-					Left: e => Async.fail(e),
-					Right: token => return OK(token) >=> mime('text/plain')
-				})
+				token <- Async.fromEither(auth.createToken(payload))
+
+				return OK(token) >=> mime('text/plain')
 			})
-			.catch(e => Async.of(errMapper(e)))
+			.catch(e => Async.of(errorMapper(e)))
 			.chain(wp => wp(context));
 		}
 
@@ -205,13 +306,19 @@ exports.authService = function(privateKey, publicKey, alg) {
  */
 exports.queryService = function(privateKey, publicKey, alg, blacklist) {
 	//authentication WebPart or undefined
-	const authenticate = privateKey && publicKey && alg
-		&& A.authenticateJWT(privateKey, publicKey, alg, blacklist);
+	const authenticate = makeAuth(privateKey, publicKey, alg, blacklist);
 
 	//combinator to create query service endpoints
-	return (path, service, errMapper) => {
-		//responseToWebPart :: a -> WebPart
-		function responseToWebPart(response) {
+	return (serviceInfo) => {
+		//responseToWebPart :: (a -> WebPart) -> a -> WebPart
+		const defaultResult = nextResult => response => {
+			//try the custom result mapper first
+			const result = nextResult(response);
+			if (result)
+				return result;
+
+			//otherwise use our mapper
+
 			//download files
 			if (typeof response === 'object'
 				&& response.size && response.stream
@@ -231,6 +338,11 @@ exports.queryService = function(privateKey, publicKey, alg, blacklist) {
 			}
 		}
 
+		const {path, service, resultMapper, errorMapper} = commonChecks(
+			'queryService', 'IQueryService', 'query', defaultResult,
+			serviceInfo
+		);
+
 		//runQuery :: WebPart
 		function runQuery(context) {
 			return Async.try(do Async {
@@ -239,9 +351,9 @@ exports.queryService = function(privateKey, publicKey, alg, blacklist) {
 
 				res <- service.query(query, userDetails)
 
-				return responseToWebPart(res)
+				return resultMapper(res)
 			})
-			.catch(e => Async.of(errMapper(e)))
+			.catch(e => Async.of(errorMapper(e)))
 			.chain(wp => wp(context));
 		}
 
@@ -255,4 +367,52 @@ exports.queryService = function(privateKey, publicKey, alg, blacklist) {
 					runQuery
 		};
 	}
+}
+
+function isAuthenticator(x) {
+	return typeof x === 'function';
+}
+
+/**
+ *	makeAuth :: CryptoInformation | Authenticator -> Authenticator | null
+ *
+ *	Makes an authenticator from the CryptoInformation, if it is valid,
+ *	or returns null.
+ *
+ *	If an Authenticator is provided, it is returned.
+ */
+function makeAuth(privateKey, publicKey, alg, blacklist) {
+	return isAuthenticator(privateKey) ? privateKey :
+		(privateKey && publicKey && alg && 
+			A.authenticateJWT(privateKey, publicKey, alg, blacklist));
+}
+
+function commonChecks(combName, serviceType, method, defaultResult, serviceInfo) {
+		const defaultError = expr {
+			nextMapper => e => mime('application/json') >=> caseOf(e, {
+				AuthenticationError: e => nexMapper(e) ||
+					FORBIDDEN(JSON.stringify(e.message)),
+				default: e => nextMapper(e) ||
+					INTERNAL_ERROR(JSON.stringify(e.message)),
+			})
+		};
+
+		const path = serviceInfo.path;
+		const service = serviceInfo.service;
+		const resultMapper = defaultResult(serviceInfo.resultMapper || (x => null));
+		const errorMapper = defaultError(serviceInfo.errorMapper || (x => null));
+
+		if (typeof path !== 'string')
+			throw new Error('Path for '+combName+' must be a string');
+
+		if (typeof service !== 'object'
+			|| typeof service[method] !== 'function')
+			throw new Error('The service for '+combName+' must be an '+serviceType);
+
+		return {
+			path,
+			service,
+			resultMapper,
+			errorMapper
+		};
 }

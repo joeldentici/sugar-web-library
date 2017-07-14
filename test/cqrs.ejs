@@ -1,0 +1,100 @@
+const Sugar = require('../src/sugar.js');
+const Async = require('monadic-js').Async;
+const {replicateM} = require('monadic-js').Utility;
+
+const {queryService, writeService, authService} = Sugar.Combinators.CQRS;
+const {UNPROCESSABLE_ENTITY, NOT_FOUND} = Sugar.Combinators.RequestErrors;
+const {defaultConfig, startWebServer} = Sugar.Server;
+
+const PassThrough = require('stream').PassThrough;
+const Rx = require('rx');
+
+//test with no authentication first
+const query = queryService();
+
+const queryAuth = queryService('blah', 'blah', 'HS256');
+
+//implementation of our random objects server
+function random(q) {
+	if (q.stream) {
+		const q2 = Object.assign({}, q, {
+			stream: undefined,
+		});
+
+		const toStream = x => Rx.Observable.just(x);
+
+		return expr {toStream <$> random(q2)}
+	}
+
+	if (q.file) {
+		const q2 = Object.assign({}, q, {
+			file: undefined,
+		});
+
+		const mkstream = x => {
+			stream = new PassThrough();
+			stream.end(x);
+			return stream;
+		}
+
+		const toBuffer = x => Buffer.from(x.toString());
+
+		const mkfile = x => ({
+			size: Buffer.byteLength(x),
+			stream: mkstream(x),
+			name: q.type + '.txt',
+		});
+
+		return expr { mkfile <$> toBuffer <$> random(q2) }
+	}
+
+	if (q.type === 'bool') {
+		return Async.of(Math.random() > 0.5)
+	}
+	//assume number
+	else if (q.type === 'number') {
+		const lower = Number(q.lower || 0);
+		const upper = Number(q.upper || 1);
+		const bound = Number(q.bound || (upper - lower));
+
+		return Async.create(succ => succ(bound * Math.random() + lower));
+	}
+	else if (q.type === 'int') {
+		const q2 = Object.assign({}, q, {
+			type: 'number'
+		});
+
+		return expr { Math.round <$> random(q2) }
+	}
+	else if (q.type === 'string') {
+		const q2 = Object.assign({}, q, {
+			type: 'int'
+		});
+
+		const asString = x => String.fromCharCode(x);
+		const join = x => x.join('');
+
+
+		const q2s = replicateM(Async, q.length, expr { asString <$> random(q2) });
+
+		return expr {join <$> q2s };
+	}
+	else {
+		return Async.fail(new Error("Unknown type given to random: " + q.type));
+	}
+}
+
+//wrap the random function up into the service interface
+const service = {
+	query(q, u) {
+		return random(q);
+	}
+};
+
+//and make an error mapper for the errors that might be thrown
+const errMapper = e => UNPROCESSABLE_ENTITY(JSON.stringify(e.message));
+
+//finally get a WebPart at a specified URL for our service
+const test = query('/api/random', service, errMapper);
+
+startWebServer(defaultConfig(), expr { test <|> NOT_FOUND("Sorry, we couldn't find that resource.") });

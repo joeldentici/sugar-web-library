@@ -50,7 +50,7 @@ function addCompression(request) {
 			return encoding(usableAlgs[0]);
 	}
 
-	return Async.unit;
+	return ctx => Async.unit(ctx);
 }
 
 /**

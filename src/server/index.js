@@ -52,7 +52,7 @@ function getFormParser(contentType) {
 }
 
 /**
- *	parseForm :: NodeHttpRequest -> Promise (Map string (string | FileUpload))
+ *	parseForm :: NodeHttpRequest -> Async () (Map string (string | FileUpload))
  *
  *	Parses the request body to get the form. If there is no
  *	parser for the content type of the request, then no request
@@ -65,25 +65,26 @@ function parseForm(req) {
 			.then(getFormParser(contentType));
 	}
 	else {
-		return Promise.resolve(undefined);
+		return Async.of(undefined);
 	}
 }
 
 /**
- *	getRawForm :: NodeHttpRequest -> Promise Buffer
+ *	getRawForm :: NodeHttpRequest -> Async () Buffer
  *
  *	Extracts the data from the Node HTTP Server Request.
  */
 function getRawForm(req) {
-	return new Promise((res, rej) => {
+	return Async.create((succ, fail) => {
 		const buffers = [];
+
 		req.on('data', x => {buffers.push(x);});
-		req.on('end', () => res(Buffer.concat(buffers)));
+		req.on('end', () => succ(Buffer.concat(buffers)));
 	});
 }
 
 /**
- *	parseRequest :: NodeHttpRequest -> Promise HttpRequest
+ *	parseRequest :: NodeHttpRequest -> Async () HttpRequest
  *
  *	Performs further processing on the incoming node HTTP Request
  *	before mapping it to a Sugar HTTP Request and returning it in
@@ -96,7 +97,7 @@ function parseRequest(req) {
 	const [url, query] = parseUrl(req.url);
 
 	//once form is parsed
-	return getForm.then(form => ({
+	return getForm.map(form => ({
 		version: req.httpVersion,
 		url,
 		host: req.headers.host,
@@ -109,14 +110,14 @@ function parseRequest(req) {
 }
 
 /**
- *	createContext :: Object -> Object -> Object -> Promise HttpContext
+ *	createContext :: Object -> Object -> Object -> Async () HttpContext
  *
  *	Extracts and further parses the request data from the
  *	node HTTP server to create a Sugar HttpContext
  */
 function createContext(req, res, config) {
 	return parseRequest(req)
-		.then(request => ({
+		.map(request => ({
 			request,
 			response: {
 				status: 0,
@@ -191,12 +192,12 @@ function startWebServer(config, app, verbose = 0) {
 
 		//create context for the request
 		createContext(req, res, config)
-			.then(x => {
+			.map(x => {
 				verbose > 2 && console.log(`Input HttpContext for ${id}`, x);
 				return x;
 			})
-			.then(x => Async.run(app(x))) //then run it through the application
-			.then(x => {				
+			.chain(x => app(x)) //then run it through the application
+			.map(x => {				
 				verbose > 1 && console.log(`Request ${id} processed, sending response`);
 				verbose > 2 && console.log(`Output HttpContext for ${id}`, x);
 
@@ -216,7 +217,7 @@ function startWebServer(config, app, verbose = 0) {
 				x.response.content.on('end', () => verbose > 1 && console.log(
 					`Response sent for request ${id}`));
 
-				if (x.request.headers['content-type'] !== 'HEAD')
+				if (x.request.method !== 'HEAD')
 					//output the content to the response
 					content.pipe(res);
 				else
@@ -231,7 +232,8 @@ function startWebServer(config, app, verbose = 0) {
 				//we should respond with an internal server error
 				res.writeHead(500, headers({'Content-Type': 'text/plain'}));
 				res.end("An internal server error occurred");
-			});
+			})
+			.fork(x => x, e => e);
 	}
 
 	//create the appropriate type of http server

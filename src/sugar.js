@@ -114,7 +114,6 @@ exports.asyncContext = function(fn) {
 	}
 }
 
-exports.Operators = require('./operators/index.js');
 exports.Server = require('./server/index.js');
 exports.Combinators = {
 	Authentication: require('./combinators/authentication.js'),

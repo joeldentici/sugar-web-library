@@ -1,3 +1,11 @@
+const Files = require('./files.js');
+const F = require('./filters.js');
+const {OK} = require('./successful.js');
+const Events = require('./events.js');
+const A = require('./authentication.js');
+const jwt = require('../util/jwt.ejs');
+const {mime} = require('./output.js');
+const Async = require('monadic-js').Async;
 
 /**
  *	Sugar.Combinators.CQRS
@@ -71,7 +79,7 @@
  */
 
 /**
- *	writeService :: (string, string, string) -> (string, IWriteService, IErrorMapper) -> WebPart
+ *	writeService :: (string, string, string, IBlackList) -> (string, IWriteService, IErrorMapper) -> WebPart
  *
  *	Constructs a combinator that wraps services in a WebPart.
  *
@@ -89,9 +97,9 @@
  *	response. The result of a failed command depends on what the provided error
  *	mapper does to handle it.
  */
-exports.writeService = function(privateKey, publicKey, alg) {
+exports.writeService = function(privateKey, publicKey, alg, blacklist) {
 	//load an authentication web part for the provided crypto information
-	const authenticate = A.authenticateJWT(privateKey, publicKey, alg);
+	const authenticate = A.authenticateJWT(privateKey, publicKey, alg, blacklist);
 
 	//return function that will construct a WebPart for a specific service
 	return (path, service, errMapper) => {
@@ -132,6 +140,9 @@ exports.writeService = function(privateKey, publicKey, alg) {
  *	mapper is used to map errors to WebParts. The integer argument specifies the amount
  *	of time in milliseconds after which the token will expire.
  *
+ *	The results returned by the WebPart will be JWT that have been encoded, in a text/plain
+ *	response.
+ *
  *	NOTE: This is not for the service that provides user account management. Although
  *	you can use the same JavaScript service object (ie, it implements IAuthService and
  *	one or more of IWriteService, IQueryService) to provide that functionality as the one
@@ -160,7 +171,7 @@ exports.authService = function(privateKey, publicKey, alg) {
 				//create the JWT
 				auth.createToken(payload).case({
 					Left: e => Async.fail(e),
-					Right: token => return OK(token)
+					Right: token => return OK(token) >=> mime('text/plain')
 				})
 			})
 			.catch(e => Async.of(errMapper(e)))
@@ -171,12 +182,12 @@ exports.authService = function(privateKey, publicKey, alg) {
 		//service and JWT creation on the rest
 		return expr {
 			F.POST >=> F.path(path) >=> runAuthentication
-		}
+		};
 	}
 }
 
 /**
- *	queryService :: (string, string, string) -> (string, IQueryService, IErrorMapper) -> WebPart
+ *	queryService :: (string, string, string, IBlackList) -> (string, IQueryService, IErrorMapper) -> WebPart
  *
  *	Constructs a combinator that wraps IQueryServices into WebParts.
  *
@@ -192,10 +203,10 @@ exports.authService = function(privateKey, publicKey, alg) {
  *		Event streams/Observables get turned into server-sent events
  *		Anything else gets serialized to JSON and sent as 200 OK.
  */
-exports.queryService = function(privateKey, publicKey, alg) {
+exports.queryService = function(privateKey, publicKey, alg, blacklist) {
 	//authentication WebPart or undefined
 	const authenticate = privateKey && publicKey && alg
-		&& A.authenticateJWT(privateKey, publicKey, alg);
+		&& A.authenticateJWT(privateKey, publicKey, alg, blacklist);
 
 	//combinator to create query service endpoints
 	return (path, service, errMapper) => {
@@ -215,8 +226,8 @@ exports.queryService = function(privateKey, publicKey, alg) {
 			//otherwise JSON serialize and use OK 200
 			else {
 				return expr {
-					OK(JSON.serialize(response)) >=> mime('application/json')
-				}
+					OK(JSON.stringify(response)) >=> mime('application/json')
+				};
 			}
 		}
 
@@ -242,6 +253,6 @@ exports.queryService = function(privateKey, publicKey, alg) {
 					authenticate(runQuery)
 				else
 					runQuery
-		}
+		};
 	}
 }

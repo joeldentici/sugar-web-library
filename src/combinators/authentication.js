@@ -97,16 +97,26 @@ exports.authenticateBasic = function(test, part) {
  *
  *	If authentication succeeds, the specified WebPart is ran,
  *	otherwise an appropriate error WebPart is ran.
+ *
+ *	TODO: This should also take an errMapper
  */
 exports.authenticateJWT = function(privateKey, publicKey, alg, blacklist) {
 	const auth = jwt(privateKey, publicKey);
 
+	blacklist = blacklist || {check: Async.of};
+
 	return part => context => {
-		const token = context
+		const token = (context
 			.request
-			.headers['authorization']
+			.headers['authorization'] || '')
 			.replace(/Bearer\s*/g, '');
 
+		//no sense in attempting authentication on an empty token
+		if (!token) {
+			return FORBIDDEN('You must authenticate to use this resource')(context);
+		}
+
+		//authenticate the token
 		return auth.authenticateToken(token, alg).case({
 			//the token is invalid, forbid the request
 			Left: e => FORBIDDEN(e.message)(context),

@@ -12,6 +12,7 @@ const Sugar = require('../src/sugar.js');
 const test = {
 	jwt: () => require('./jwt.ejs'),
 	events: () => require('./events.ejs'),
+	cqrs: () => require('./cqrs.ejs'),
 };
 
 const [arg] = process.argv.slice(2);

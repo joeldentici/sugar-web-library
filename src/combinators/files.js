@@ -169,7 +169,7 @@ function directoryListing(dirPath, urlPath, range) {
 
 	return readdir(dirPath)
 		.map(fileNames => ['.', '..'].concat(fileNames))
-		.bind(fileNames => mapM(Async, readStats, fileNames))
+		.bind(fileNames => mapM(Async, readStats)(fileNames))
 		.map(files => files.filter(([n,s]) => 
 			s.isFile() || s.isDirectory()))
 		.bind(files => {

@@ -84,8 +84,7 @@ const setHeader = exports.setHeader = function(header) {
  */
 const text = exports.text = function(status) {
 	return function(content) {
-		return response(status)(Buffer.from(content))
-			.arrow(setHeader('Content-Type')('text/plain'));
+		return response(status)(Buffer.from(content));
 	}
 }
 

@@ -1,6 +1,6 @@
 const http = require('http');
 const https = require('https');
-const {parseUrl, parseQuery} = require('../util/parsers.js');
+const {parseUrl, parseQuery, parsePlain} = require('../util/parsers.js');
 const fs = require('fs');
 const Async = require('monadic-js').Async;
 const {compressStream} = require('../combinators/compression.js');
@@ -21,27 +21,67 @@ const {setHeader} = require('../combinators/output.js');
 
 
 /**
- *	formParsers :: Map string (Buffer -> Map string string)
+ *	formParsers :: Map string (Buffer -> Async Error (Map string (string | FileUpload)))
  *
  *	Map content types to functions that will
  *	parse the request body.
  */
 const formParsers = {
 	'application/x-www-form-urlencoded': parseUrlEncodedForm,
+	'multipart/form-data': parseMultiPartForm,
+	'text/plain': parsePlainTextForm,
+	'application/json': parseJSONForm,
+	'text/json': parseJSONForm,
 };
 
 /**
- *	parseUrlEncodedForm :: Buffer -> Map string string
+ *	parseUrlEncodedForm :: Buffer -> Async () (Map string string)
  *
  *	Parses a form that is urlencoded by using
  *	the URI query string parser.
  */
 function parseUrlEncodedForm(rawForm) {
-	return parseQuery(rawForm.toString());
+	return Async.of(parseQuery(rawForm.toString()));
 }
 
 /**
- *	getFormParser :: string -> Buffer -> Map string (string | FileUpload)
+ *	parseJSONForm :: Buffer -> Async () (Map string string)
+ *
+ *	Parses a form that is encoded as JSON.
+ */
+function parseJSONForm(rawForm) {
+	try {
+		return Async.of(JSON.parse(rawForm.toString()));
+	}
+	catch (e) {
+		const m = "Original Text: " + rawForm.toString() + ", "
+			+ e.message;
+
+		return Async.fail(new SyntaxError(m));
+	}
+}
+
+/**
+ *	parsePlainTextForm :: Buffer -> Async () (Map string string)
+ *
+ *	Parses a plain text form.
+ */
+function parsePlainTextForm(rawForm) {
+	return Async.of(parsePlain(rawForm.toString()));
+}
+
+/**
+ *	parseMultiPartForm :: Buffer -> Async Error (Map string (string | FileUpload))
+ *
+ *	Parses a multipart/form-data form.
+ */
+function parseMultiPartForm(rawForm) {
+	return Async.fail(
+		new Error("Multipart form decoding not yet implemented!"));
+}
+
+/**
+ *	getFormParser :: string -> Buffer -> Async Error (Map string (string | FileUpload))
  *
  *	Gets a form parser for a content type. If no
  *	parser is defined for the content type, then a parser
@@ -52,7 +92,7 @@ function getFormParser(contentType) {
 }
 
 /**
- *	parseForm :: NodeHttpRequest -> Async () (Map string (string | FileUpload))
+ *	parseForm :: NodeHttpRequest -> Async Error (Map string (string | FileUpload))
  *
  *	Parses the request body to get the form. If there is no
  *	parser for the content type of the request, then no request
@@ -62,7 +102,7 @@ function parseForm(req) {
 	const contentType = req.headers['content-type'];
 	if (formParsers[contentType]) {
 		return getRawForm(req)
-			.then(getFormParser(contentType));
+			.chain(getFormParser(contentType));
 	}
 	else {
 		return Async.of(undefined);
@@ -157,14 +197,15 @@ function httpsConfig(config) {
 }
 
 /**
- *	addServer :: HttpRequest -> WebPart
+ *	addDefaults :: HttpRequest -> WebPart
  *
- *	Adds the server response header.
+ *	Adds the default headers.
  */
-function addServer(request) {
+function addDefaults(request) {
 	const host = request.headers.host || 'localhost';
 
-	return setHeader('Server')(`Sugar (${host})`);
+	return setHeader('Server')(`Sugar (${host})`)
+			.arrow(setHeader('Content-Type')('text/plain'));
 }
 
 /**
@@ -180,8 +221,8 @@ function addServer(request) {
  *		3 - Level 2 + Logging of HttpContext before and after processing
  */
 function startWebServer(config, app, verbose = 0) {
-	//add the server to the response headers
-	app = app.arrow(request(addServer));
+	//add default response headers
+	app = request(addDefaults).arrow(app);
 
 	let reqID = 0;
 	//handler to pass to the node server

@@ -103,7 +103,7 @@ exports.authenticateBasic = function(test, part) {
 exports.authenticateJWT = function(privateKey, publicKey, alg, blacklist) {
 	const auth = jwt(privateKey, publicKey);
 
-	blacklist = blacklist || {check: Async.of};
+	blacklist = blacklist || {check: x => Async.of(x)};
 
 	return (part, errMapper) => context => {
 		errMapper = errMapper || (e => FORBIDDEN(JSON.stringify(e.message)));

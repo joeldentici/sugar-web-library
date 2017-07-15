@@ -1,20 +1,40 @@
 const Sugar = require('../src/sugar.js');
 const Async = require('monadic-js').Async;
 const {replicateM} = require('monadic-js').Utility;
+const {caseOf} = require('js-helpers');
 
-const {queryService, writeService, authService} = Sugar.Combinators.CQRS;
-const {UNPROCESSABLE_ENTITY, NOT_FOUND} = Sugar.Combinators.RequestErrors;
+const CQRS = Sugar.Combinators.CQRS;
+const {UNPROCESSABLE_ENTITY, NOT_FOUND, BAD_REQUEST} = Sugar.Combinators.RequestErrors;
 const {defaultConfig, startWebServer} = Sugar.Server;
+const {AuthenticationError} = Sugar.Util.JWT;
 
 const PassThrough = require('stream').PassThrough;
 const Rx = require('rx');
 
-//test with no authentication first
-const query = queryService();
+const blacklist = {
+	list: new Set([]),
+	check(token) {
+		if (this.list.has(JSON.stringify(token)))
+			return Async.fail(AuthenticationError("You've been blacklisted"))
+		else
+			return Async.of()
+	},
+	add(token) {
+		this.list.add(JSON.stringify(token));
+	}
+}
 
-const queryAuth = queryService('blah', 'blah', 'HS256');
+//query combinators
+const queryNoAuth = CQRS.queryService();
+const queryAuth = CQRS.queryService('blah', 'blah', 'HS256', blacklist);
 
-//implementation of our random objects server
+//auth combinators
+const createAuth = CQRS.authService('blah', 'blah', 'HS256');
+
+//write combinators
+const createWrite = CQRS.writeService('blah', 'blah', 'HS256', blacklist);
+
+//implementation of our random objects service
 function random(q) {
 	if (q.stream) {
 		const q2 = Object.assign({}, q, {
@@ -80,21 +100,99 @@ function random(q) {
 		return expr {join <$> q2s };
 	}
 	else {
-		return Async.fail(new Error("Unknown type given to random: " + q.type));
+		return Async.fail(new TypeError("Unknown type given to random: " + q.type));
 	}
 }
 
-//wrap the random function up into the service interface
-const service = {
+//its easy to wrap a service to the write interface in JS
+const randomService = {
 	query(q, u) {
 		return random(q);
 	}
 };
 
 //and make an error mapper for the errors that might be thrown
-const errMapper = e => UNPROCESSABLE_ENTITY(JSON.stringify(e.message));
+const randomErrorHandler = e => caseOf(e, {
+	TypeError: e => UNPROCESSABLE_ENTITY(JSON.stringify(e.message)),
+	default: null,
+});
+
 
 //finally get a WebPart at a specified URL for our service
-const test = query('/api/random', service, errMapper);
+const randomWebPart = queryNoAuth({
+	path: '/api/random',
+	service: randomService,
+	errorMapper: randomErrorHandler
+});
 
-startWebServer(defaultConfig(), expr { test <|> NOT_FOUND("Sorry, we couldn't find that resource.") });
+
+const authService = {
+	authenticate(c) {
+		//note we could support additional authentication methods
+		//by adding a type field to the command and casing on it
+
+		if (c.userName === 'foo' && c.password === 'bar')
+			return Async.of({
+				userId: 1,
+				userName: 'foo',
+				password: 'bar',
+				permissions: [
+					'DoStuff'
+				]
+			});
+		else
+			return Async.fail(AuthenticationError('Username or password is invalid'));
+	}
+}
+
+const authWebPart = createAuth({
+	path: '/api/authenticate',
+	service: authService,
+	expirationTime: 3 * 60 * 1000,
+});
+
+
+
+class EvilPersonError extends Error {
+
+}
+
+const writeService = {
+	execute(c, u) {
+		if (c.type === 'DeleteTheDatabase'
+			&& u.permissions.indexOf('DeleteTheDatabase') === -1) {
+			blacklist.add(u);
+
+			return Async.fail(new EvilPersonError("You aren't allowed to\
+				delete the database!"));
+		}
+		else if (u.permissions.indexOf('DoStuff') !== -1) {
+			return Async.of({
+				command: c.type,
+				status: 'succeeded',
+				you: u
+			});
+		}
+	}
+}
+
+const writeErrorMapper = e => caseOf(e, {
+	EvilPersonError: e => BAD_REQUEST(JSON.stringify(e.message)),
+	default: e => null,
+});
+
+const writeWebPart = createWrite({
+	path: '/api/doStuff',
+	service: writeService,
+	errorMapper: writeErrorMapper,
+});
+
+const app = expr {
+	randomWebPart
+	<|> authWebPart
+	<|> writeWebPart
+	<|> NOT_FOUND("Sorry, we couldn't find that resource.")
+};
+
+
+startWebServer(defaultConfig(), app, 1);

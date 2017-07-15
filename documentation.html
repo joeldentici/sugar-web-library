@@ -210,9 +210,51 @@
 			</li>
 		
 			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.IResultMapper">
+					<b>IResultMapper</b>
+				</a> <b>::</b> r &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.CryptoInformation">
+					<b>CryptoInformation</b>
+				</a> <b>::</b> (string, string, string, IBlackList?)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.AuthInformation">
+					<b>AuthInformation</b>
+				</a> <b>::</b> (string, string, string)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.IAuthenticator">
+					<b>IAuthenticator</b>
+				</a> <b>::</b> Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.Authenticator">
+					<b>Authenticator</b>
+				</a> <b>::</b> (WebPart, IErrorMapper) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.ServiceInfo">
+					<b>ServiceInfo</b>
+				</a> <b>::</b> Object
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.AuthServiceInfo">
+					<b>AuthServiceInfo</b>
+				</a> <b>::</b> Object
+			</li>
+		
+			<li>
 				<a href="#doc.module.Sugar.Combinators.CQRS.func.writeService">
 					<b>writeService</b>
-				</a> <b>::</b> (string, string, string) &#8594; (string, IWriteService, IErrorMapper) &#8594; WebPart
+				</a> <b>::</b> CryptoInformation | Authenticator &#8594; ServiceInfo &#8594; WebPart
 			</li>
 		
 			<li>
@@ -224,7 +266,13 @@
 			<li>
 				<a href="#doc.module.Sugar.Combinators.CQRS.func.queryService">
 					<b>queryService</b>
-				</a> <b>::</b> (string, string, string) &#8594; (string, IQueryService, IErrorMapper) &#8594; WebPart
+				</a> <b>::</b> (string, string, string, IBlackList) &#8594; (string, IQueryService, IErrorMapper) &#8594; WebPart
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Combinators.CQRS.func.makeAuth">
+					<b>makeAuth</b>
+				</a> <b>::</b> CryptoInformation | Authenticator &#8594; Authenticator | null
 			</li>
 		
 			</ul>
@@ -263,7 +311,7 @@
 			<li>
 				<a href="#doc.module.Sugar.Combinators.Authentication.func.authenticateJWT">
 					<b>authenticateJWT</b>
-				</a> <b>::</b> (string, string, string, IBlackList) &#8594; WebPart &#8594; WebPart
+				</a> <b>::</b> (string, string, string, IBlackList) &#8594; (WebPart, (Error &#8594; WebPart)?) &#8594; WebPart
 			</li>
 		
 			</ul>
@@ -784,27 +832,6 @@
 	
 		<div class="module-header">
 			<div class="module-name">
-			Module: <a href="#doc.module.Sugar.Operators">Sugar.Operators</a>
-			</div>
-			<ul class="module-functions">
-				
-			<li>
-				<a href="#doc.module.Sugar.Operators.func.arrow">
-					<b>arrow</b>
-				</a> <b>::</b> Monad m &#8658; (a &#8594; m b) &#8594; (b &#8594; m c) &#8594; a &#8594; m c
-			</li>
-		
-			<li>
-				<a href="#doc.module.Sugar.Operators.func.or">
-					<b>or</b>
-				</a> <b>::</b> (a &#8594; Async e b) &#8594; (a &#8594; Async e b) &#8594; a &#8594; Async e b
-			</li>
-		
-			</ul>
-		</div>
-	
-		<div class="module-header">
-			<div class="module-name">
 			Module: <a href="#doc.module.Sugar.Server">Sugar.Server</a>
 			</div>
 			<ul class="module-functions">
@@ -812,43 +839,61 @@
 			<li>
 				<a href="#doc.module.Sugar.Server.func.formParsers">
 					<b>formParsers</b>
-				</a> <b>::</b> Map string (Buffer &#8594; Map string string)
+				</a> <b>::</b> Map string (Buffer &#8594; Async Error (Map string (string | FileUpload)))
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Server.func.parseUrlEncodedForm">
 					<b>parseUrlEncodedForm</b>
-				</a> <b>::</b> Buffer &#8594; Map string string
+				</a> <b>::</b> Buffer &#8594; Async () (Map string string)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.parseJSONForm">
+					<b>parseJSONForm</b>
+				</a> <b>::</b> Buffer &#8594; Async () (Map string string)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.parsePlainTextForm">
+					<b>parsePlainTextForm</b>
+				</a> <b>::</b> Buffer &#8594; Async () (Map string string)
+			</li>
+		
+			<li>
+				<a href="#doc.module.Sugar.Server.func.parseMultiPartForm">
+					<b>parseMultiPartForm</b>
+				</a> <b>::</b> Buffer &#8594; Async Error (Map string (string | FileUpload))
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Server.func.getFormParser">
 					<b>getFormParser</b>
-				</a> <b>::</b> string &#8594; Buffer &#8594; Map string (string | FileUpload)
+				</a> <b>::</b> string &#8594; Buffer &#8594; Async Error (Map string (string | FileUpload))
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Server.func.parseForm">
 					<b>parseForm</b>
-				</a> <b>::</b> NodeHttpRequest &#8594; Promise (Map string (string | FileUpload))
+				</a> <b>::</b> NodeHttpRequest &#8594; Async Error (Map string (string | FileUpload))
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Server.func.getRawForm">
 					<b>getRawForm</b>
-				</a> <b>::</b> NodeHttpRequest &#8594; Promise Buffer
+				</a> <b>::</b> NodeHttpRequest &#8594; Async () Buffer
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Server.func.parseRequest">
 					<b>parseRequest</b>
-				</a> <b>::</b> NodeHttpRequest &#8594; Promise HttpRequest
+				</a> <b>::</b> NodeHttpRequest &#8594; Async () HttpRequest
 			</li>
 		
 			<li>
 				<a href="#doc.module.Sugar.Server.func.createContext">
 					<b>createContext</b>
-				</a> <b>::</b> Object &#8594; Object &#8594; Object &#8594; Promise HttpContext
+				</a> <b>::</b> Object &#8594; Object &#8594; Object &#8594; Async () HttpContext
 			</li>
 		
 			<li>
@@ -858,8 +903,8 @@
 			</li>
 		
 			<li>
-				<a href="#doc.module.Sugar.Server.func.addServer">
-					<b>addServer</b>
+				<a href="#doc.module.Sugar.Server.func.addDefaults">
+					<b>addDefaults</b>
 				</a> <b>::</b> HttpRequest &#8594; WebPart
 			</li>
 		
@@ -1137,9 +1182,100 @@ applications if you use different types.
 			</div>
 		
 			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.IResultMapper">
+				<div class="function-name">
+					<b>IResultMapper</b> <b>::</b> r &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+Like IErrorMapper, but for actual results.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.CryptoInformation">
+				<div class="function-name">
+					<b>CryptoInformation</b> <b>::</b> (string, string, string, IBlackList?)
+				</div>
+				<div class="function-desc">
+					
+Crypto information is used to construct an authentication
+WebPart combinator.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.AuthInformation">
+				<div class="function-name">
+					<b>AuthInformation</b> <b>::</b> (string, string, string)
+				</div>
+				<div class="function-desc">
+					
+Auth information is used to construct a JWT
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.IAuthenticator">
+				<div class="function-name">
+					<b>IAuthenticator</b> <b>::</b> Object
+				</div>
+				<div class="function-desc">
+					
+An IAuthenticator is an Object with a <code>createToken</code>
+method that takes a first argument of any type and
+a second argument of expiration time (int). The result is an
+<code>Either AuthenticationError string</code>.<br><br>This should perform the opposite operation of whatever your
+Authenticator performs.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.Authenticator">
+				<div class="function-name">
+					<b>Authenticator</b> <b>::</b> (WebPart, IErrorMapper) &#8594; WebPart
+				</div>
+				<div class="function-desc">
+					
+A WebPart combinator that checks user credentials before
+applying the WebPart it receives.<br><br>This should perform the opposite operation of whatever your
+IAuthenticator performs.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.ServiceInfo">
+				<div class="function-name">
+					<b>ServiceInfo</b> <b>::</b> Object
+				</div>
+				<div class="function-desc">
+					
+Service info is a configuration object that specifies
+the path (string), IWriteService | IAuthService | IQueryService,
+an IErrorMapper, and a IResultMapper. The result mapper
+and error mapper are optional. The default error mapper
+will try your error mapper first, and on anything else
+JSON serialize the error message. The default result mapper
+behavior varies on combinator type.<br><br>properties: path, service, resultMapper, errorMapper
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.AuthServiceInfo">
+				<div class="function-name">
+					<b>AuthServiceInfo</b> <b>::</b> Object
+				</div>
+				<div class="function-desc">
+					
+A configuration object with all the properties of ServiceInfo,
+plus an integer expiration time<br><br>properties: path, service, resultMapper, errorMapper, expirationTime
+				</div>
+			</div>
+		
+			<div class="function-description"
 			id="doc.module.Sugar.Combinators.CQRS.func.writeService">
 				<div class="function-name">
-					<b>writeService</b> <b>::</b> (string, string, string) &#8594; (string, IWriteService, IErrorMapper) &#8594; WebPart
+					<b>writeService</b> <b>::</b> CryptoInformation | Authenticator &#8594; ServiceInfo &#8594; WebPart
 				</div>
 				<div class="function-desc">
 					
@@ -1166,7 +1302,8 @@ Constructs a combinator for creating a specialized service that authenticates
 user credentials. This function works exactly like writeService, but works with
 an IAuthService (which can also be an IWriteService).<br><br>The request must match the specified path and must be a POST request. The error
 mapper is used to map errors to WebParts. The integer argument specifies the amount
-of time in milliseconds after which the token will expire.<br><br>NOTE: This is not for the service that provides user account management. Although
+of time in milliseconds after which the token will expire.<br><br>The results returned by the WebPart will be JWT that have been encoded, in a text/plain
+response.<br><br>NOTE: This is not for the service that provides user account management. Although
 you can use the same JavaScript service object (ie, it implements IAuthService and
 one or more of IWriteService, IQueryService) to provide that functionality as the one
 you use for authentication, you must construct additional writeService and readService
@@ -1177,7 +1314,7 @@ WebParts to hook it into Sugar.
 			<div class="function-description"
 			id="doc.module.Sugar.Combinators.CQRS.func.queryService">
 				<div class="function-name">
-					<b>queryService</b> <b>::</b> (string, string, string) &#8594; (string, IQueryService, IErrorMapper) &#8594; WebPart
+					<b>queryService</b> <b>::</b> (string, string, string, IBlackList) &#8594; (string, IQueryService, IErrorMapper) &#8594; WebPart
 				</div>
 				<div class="function-desc">
 					
@@ -1188,6 +1325,18 @@ Errors go through the specified IErrorMapper
 Files get downloaded
 Event streams/Observables get turned into server-sent events
 Anything else gets serialized to JSON and sent as 200 OK.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Combinators.CQRS.func.makeAuth">
+				<div class="function-name">
+					<b>makeAuth</b> <b>::</b> CryptoInformation | Authenticator &#8594; Authenticator | null
+				</div>
+				<div class="function-desc">
+					
+Makes an authenticator from the CryptoInformation, if it is valid,
+or returns null.<br><br>If an Authenticator is provided, it is returned.
 				</div>
 			</div>
 		
@@ -1269,14 +1418,14 @@ access way (such as in process or in an in memory data store).
 			<div class="function-description"
 			id="doc.module.Sugar.Combinators.Authentication.func.authenticateJWT">
 				<div class="function-name">
-					<b>authenticateJWT</b> <b>::</b> (string, string, string, IBlackList) &#8594; WebPart &#8594; WebPart
+					<b>authenticateJWT</b> <b>::</b> (string, string, string, IBlackList) &#8594; (WebPart, (Error &#8594; WebPart)?) &#8594; WebPart
 				</div>
 				<div class="function-desc">
 					
 Constructs a WebPart that uses the JWT library to authenticate
 the Authorization header. If the token is authenticated, the
 payload is placed on the HttpContext as userToken.<br><br>If authentication succeeds, the specified WebPart is ran,
-otherwise an appropriate error WebPart is ran.
+otherwise an appropriate error WebPart is ran.<br><br>TODO: This should also take an errMapper
 				</div>
 			</div>
 		
@@ -1831,10 +1980,9 @@ fit into any other specific module.
 					
 Creates a web part that will time out if the specified
 web part does not complete processing in the specified
-timespan (milliseconds).<br><br>Due to the way that Promises work, the provided WebPart
-processing will not be cancelled, but its result will be
-discarded and the returned WebPart is guaranteed to complete
-within the provided timespan.
+timespan (milliseconds).<br><br>The provided WebPart will not be cancelled as it will
+have already started processing. Typically you shouldn't
+use this anyway and your timeouts should happen in your code.
 				</div>
 			</div>
 		
@@ -2335,52 +2483,6 @@ HTTP status 204 response
 			</div>
 		</div>
 	
-		<div class="module-description" id="doc.module.Sugar.Operators">
-			<div class="module-name">
-				Module: Sugar.Operators
-			</div>
-			<div class="module-author">
-			<b>Written By:</b> Joel Dentici
-			</div>
-			<div class="module-date">
-			<b>Written On:</b> 6/18/2017
-			</div>
-			<div class="module-desc">
-			Defines operators used by Sugar. These are
-special functions attached to the Function prototype
-allowing the composition of WebPart combinators in different
-ways.
-			</div>
-			<div class="module-functions">
-				
-			<div class="function-description"
-			id="doc.module.Sugar.Operators.func.arrow">
-				<div class="function-name">
-					<b>arrow</b> <b>::</b> Monad m &#8658; (a &#8594; m b) &#8594; (b &#8594; m c) &#8594; a &#8594; m c
-				</div>
-				<div class="function-desc">
-					Kleisi Composition of monadic
-functions
-				</div>
-			</div>
-		
-			<div class="function-description"
-			id="doc.module.Sugar.Operators.func.or">
-				<div class="function-name">
-					<b>or</b> <b>::</b> (a &#8594; Async e b) &#8594; (a &#8594; Async e b) &#8594; a &#8594; Async e b
-				</div>
-				<div class="function-desc">
-					
-Returns a new function that will try the first
-function, then try the second function if the
-first one fails.<br><br>This is essentially an alternative instance for Async
-combinators.
-				</div>
-			</div>
-		
-			</div>
-		</div>
-	
 		<div class="module-description" id="doc.module.Sugar.Server">
 			<div class="module-name">
 				Module: Sugar.Server
@@ -2401,7 +2503,7 @@ startWebServer and defaultConfig
 			<div class="function-description"
 			id="doc.module.Sugar.Server.func.formParsers">
 				<div class="function-name">
-					<b>formParsers</b> <b>::</b> Map string (Buffer &#8594; Map string string)
+					<b>formParsers</b> <b>::</b> Map string (Buffer &#8594; Async Error (Map string (string | FileUpload)))
 				</div>
 				<div class="function-desc">
 					
@@ -2413,7 +2515,7 @@ parse the request body.
 			<div class="function-description"
 			id="doc.module.Sugar.Server.func.parseUrlEncodedForm">
 				<div class="function-name">
-					<b>parseUrlEncodedForm</b> <b>::</b> Buffer &#8594; Map string string
+					<b>parseUrlEncodedForm</b> <b>::</b> Buffer &#8594; Async () (Map string string)
 				</div>
 				<div class="function-desc">
 					
@@ -2423,9 +2525,42 @@ the URI query string parser.
 			</div>
 		
 			<div class="function-description"
+			id="doc.module.Sugar.Server.func.parseJSONForm">
+				<div class="function-name">
+					<b>parseJSONForm</b> <b>::</b> Buffer &#8594; Async () (Map string string)
+				</div>
+				<div class="function-desc">
+					
+Parses a form that is encoded as JSON.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.parsePlainTextForm">
+				<div class="function-name">
+					<b>parsePlainTextForm</b> <b>::</b> Buffer &#8594; Async () (Map string string)
+				</div>
+				<div class="function-desc">
+					
+Parses a plain text form.
+				</div>
+			</div>
+		
+			<div class="function-description"
+			id="doc.module.Sugar.Server.func.parseMultiPartForm">
+				<div class="function-name">
+					<b>parseMultiPartForm</b> <b>::</b> Buffer &#8594; Async Error (Map string (string | FileUpload))
+				</div>
+				<div class="function-desc">
+					
+Parses a multipart/form-data form.
+				</div>
+			</div>
+		
+			<div class="function-description"
 			id="doc.module.Sugar.Server.func.getFormParser">
 				<div class="function-name">
-					<b>getFormParser</b> <b>::</b> string &#8594; Buffer &#8594; Map string (string | FileUpload)
+					<b>getFormParser</b> <b>::</b> string &#8594; Buffer &#8594; Async Error (Map string (string | FileUpload))
 				</div>
 				<div class="function-desc">
 					
@@ -2438,7 +2573,7 @@ that returns an empty form is returned.
 			<div class="function-description"
 			id="doc.module.Sugar.Server.func.parseForm">
 				<div class="function-name">
-					<b>parseForm</b> <b>::</b> NodeHttpRequest &#8594; Promise (Map string (string | FileUpload))
+					<b>parseForm</b> <b>::</b> NodeHttpRequest &#8594; Async Error (Map string (string | FileUpload))
 				</div>
 				<div class="function-desc">
 					
@@ -2451,7 +2586,7 @@ data is read and the form is undefined.
 			<div class="function-description"
 			id="doc.module.Sugar.Server.func.getRawForm">
 				<div class="function-name">
-					<b>getRawForm</b> <b>::</b> NodeHttpRequest &#8594; Promise Buffer
+					<b>getRawForm</b> <b>::</b> NodeHttpRequest &#8594; Async () Buffer
 				</div>
 				<div class="function-desc">
 					
@@ -2462,20 +2597,20 @@ Extracts the data from the Node HTTP Server Request.
 			<div class="function-description"
 			id="doc.module.Sugar.Server.func.parseRequest">
 				<div class="function-name">
-					<b>parseRequest</b> <b>::</b> NodeHttpRequest &#8594; Promise HttpRequest
+					<b>parseRequest</b> <b>::</b> NodeHttpRequest &#8594; Async () HttpRequest
 				</div>
 				<div class="function-desc">
 					
 Performs further processing on the incoming node HTTP Request
 before mapping it to a Sugar HTTP Request and returning it in
-a Promise.
+a Async.
 				</div>
 			</div>
 		
 			<div class="function-description"
 			id="doc.module.Sugar.Server.func.createContext">
 				<div class="function-name">
-					<b>createContext</b> <b>::</b> Object &#8594; Object &#8594; Object &#8594; Promise HttpContext
+					<b>createContext</b> <b>::</b> Object &#8594; Object &#8594; Object &#8594; Async () HttpContext
 				</div>
 				<div class="function-desc">
 					
@@ -2499,13 +2634,13 @@ https server constructor.
 			</div>
 		
 			<div class="function-description"
-			id="doc.module.Sugar.Server.func.addServer">
+			id="doc.module.Sugar.Server.func.addDefaults">
 				<div class="function-name">
-					<b>addServer</b> <b>::</b> HttpRequest &#8594; WebPart
+					<b>addDefaults</b> <b>::</b> HttpRequest &#8594; WebPart
 				</div>
 				<div class="function-desc">
 					
-Adds the server response header.
+Adds the default headers.
 				</div>
 			</div>
 		
@@ -2518,7 +2653,7 @@ Adds the server response header.
 					
 Runs a web server that processes each request
 through the specified Web Part.<br><br>The verbosity levels cause logging as follows:
-0 - No logging
+0 - Log errors that the application fails to handle or server fails to handle
 1 - Logging when server starts listening and when an error occurs
 2 - Logging of requests + Level 1
 3 - Level 2 + Logging of HttpContext before and after processing
@@ -2697,7 +2832,8 @@ parameters (form data, query string data, etc.).
 				<div class="function-desc">
 					
 Takes a URI Encoded form and parses it into
-a map of key-value string pairs (actually an object).
+a map of key-value string pairs (actually an object).<br><br>TODO: This needs to decode characters, consider using
+Node query module.
 				</div>
 			</div>
 		
@@ -2723,7 +2859,7 @@ components, and parses the query string.
 			</div>
 
 			<div class="footer">
-			This documentation was generated by <code>hmdoc</code> on <code>7/12/2017, 10:02:09 PM</code>
+			This documentation was generated by <code>hmdoc</code> on <code>7/14/2017, 9:57:21 PM</code>
 			</div>
 		</body>
 	</html>

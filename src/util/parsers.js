@@ -17,6 +17,9 @@
  *
  *	Takes a URI Encoded form and parses it into
  *	a map of key-value string pairs (actually an object).
+ *
+ *	TODO: This needs to decode characters, consider using
+ *	Node query module.
  */
 const parseQuery = exports.parseQuery = function(query) {
 	return (query || '')
@@ -24,6 +27,16 @@ const parseQuery = exports.parseQuery = function(query) {
 		.map(x => x.split("="))
 		.reduce((acc, x) => {
 			acc[x[0]] = x[1];
+			return acc;
+		}, {});
+}
+
+const parsePlain = exports.parsePlain = function(form) {
+	return (form || '')
+		.split('&')
+		.map(x => x.split('='))
+		.reduce((acc, x) => {
+			acc[x[0]] = x[1].replace(/\+/g, ' ');
 			return acc;
 		}, {});
 }

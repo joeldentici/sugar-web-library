@@ -27,7 +27,7 @@ Run `npm install --save sugar-web-library`.
 ## Hello, World!
 Writing "Hello, World!" with Sugar is very easy, just put the following into a JavaScript file:
 
-```
+```js
 const Sugar = require('sugar-web-library');
 const {OK} = Sugar.Combinators.Successful;
 const {startWebServer, defaultConfig} = Sugar.Server;

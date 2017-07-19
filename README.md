@@ -58,7 +58,7 @@ Now we are ready for more examples.
 Todo: add more examples.
 
 ## CQRS
-Sugar provides combinators for structuring a CQRS application. Unlike the rest of Sugar, these are highly opinionated and force you to follow a very strict structure. `Sugar.CQRS.{writeService,authService,readService}` allow you to quickly expose your JavaScript APIs over the web.
+Sugar provides combinators for structuring a CQRS application. Unlike the rest of Sugar, these are highly opinionated and force you to follow a very strict structure. Despite this strictness, `Sugar.CQRS.{writeService,authService,readService}` allow you to quickly expose your JavaScript APIs over the web.
 
 ## More information
 Please read [documentation.html](documentation.html) for more information.

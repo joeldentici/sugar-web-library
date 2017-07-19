@@ -2,7 +2,7 @@
 
 Sugar is a web application library providing combinators to solve most of the problems faced in creating a typical Web application.
 
-Sugar is heavily influenced by [Suave](https://suave.io) and steals some of its API.
+Sugar is heavily influenced by [Suave](https://suave.io) and borrows some of its API.
 
 Sugar is not a framework and is unopinionated. Sugar provides you a way to easily expose an interface to your own code over HTTP. All you need to do is provide bindings to your services that return `Async`s. Sugar is built using `monadic-js`, which provides an implementation of this. It has only been tested using this implementation as well. If you create bindings to your service that return Promises or another implementation of `Async` (also known as lazy Future or Task) that you can turn into a Promise, you can easily convert them to a `monadic-js.Async` with `Async.fromPromise`. See the examples below to learn how to connect non-Sugar code to Sugar code.
 

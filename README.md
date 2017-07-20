@@ -61,7 +61,7 @@ Todo: add more examples.
 Sugar provides combinators for structuring a CQRS application. Unlike the rest of Sugar, these are highly opinionated and force you to follow a very strict structure. Despite this strictness, `Sugar.CQRS.{writeService,authService,readService}` allow you to quickly expose your JavaScript APIs over the web.
 
 ## More information
-Please read [documentation.html](documentation.html) for more information.
+Please read [documentation.md](documentation.md) for more information.
 
 ## Contributing
 Contributions are welcome. Currently just follow the standard fork-commit-push-pull request model. If this gets attention and people want to collaborate I will start an organization for this and we can start coming up with actual guidelines for style and contribution.

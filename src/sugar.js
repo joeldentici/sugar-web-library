@@ -137,7 +137,7 @@ exports.Combinators = {
 	ServerErrors: require('./combinators/servererrors.js'),
 	Successful: require('./combinators/successful.js'),
 };
-exports.Util = {
+exports.Utility = {
 	Parsers: require('./util/parsers.js'),
 	JWT: require('./util/jwt.ejs'),
 };

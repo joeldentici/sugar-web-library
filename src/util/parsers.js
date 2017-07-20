@@ -1,5 +1,5 @@
 /**
- *	Sugar.Util.Parsers
+ *	Sugar.Utility.Parsers
  *	written by Joel Dentici
  *	on 6/18/2017
  *

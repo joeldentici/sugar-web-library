@@ -1,12 +1,11 @@
 const Sugar = require('../src/sugar.js');
 const Async = require('monadic-js').Async;
-const {replicateM} = require('monadic-js').Utility;
-const {caseOf} = require('js-helpers');
+const {replicateM, caseOf} = require('monadic-js').Utility;
 
 const CQRS = Sugar.Combinators.CQRS;
 const {UNPROCESSABLE_ENTITY, NOT_FOUND, BAD_REQUEST} = Sugar.Combinators.RequestErrors;
 const {defaultConfig, startWebServer} = Sugar.Server;
-const {AuthenticationError} = Sugar.Util.JWT;
+const {AuthenticationError} = Sugar.Utility.JWT;
 
 const PassThrough = require('stream').PassThrough;
 const Rx = require('rx');

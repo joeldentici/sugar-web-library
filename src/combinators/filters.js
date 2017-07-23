@@ -1,6 +1,6 @@
-const {zip} = require('js-helpers');
 const {response} = require('./output.js');
-const Async = require('monadic-js').Async;
+const {Async, Utility} = require('monadic-js');
+const {zip} = Utility;
 const path = require('path');
 
 /**

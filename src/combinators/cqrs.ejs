@@ -7,8 +7,8 @@ const Events = require('./events.js');
 const A = require('./authentication.js');
 const jwt = require('../util/jwt.ejs');
 const {mime} = require('./output.js');
-const Async = require('monadic-js').Async;
-const {caseOf} = require('js-helpers');
+const {Async, Utility} = require('monadic-js');
+const {caseOf} = Utility;
 
 /**
  *	Sugar.Combinators.CQRS

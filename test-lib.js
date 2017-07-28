@@ -10,6 +10,11 @@ function equals(a, b) {
 	}
 }
 
+function eq(test) {
+	return (a, b, msg) => test.ok(equals(a, b), msg);
+}
+
 module.exports = {
 	equals,
+	eq
 }

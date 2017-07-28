@@ -22,23 +22,35 @@
  *	Node query module.
  */
 const parseQuery = exports.parseQuery = function(query) {
-	return (query || '')
+	return query ? query
 		.split("&")
 		.map(x => x.split("="))
 		.reduce((acc, x) => {
 			acc[x[0]] = x[1];
 			return acc;
-		}, {});
+		}, {}) : {};
 }
 
+/**
+ *	parsePlain :: string -> Map string string
+ *
+ *	Parses a text/plain encoded form, which is the same
+ *	as parsing a URI encoded form, but without decoding
+ *	any special symbols (I believe this is someone trying
+ *	to get unicode in with a charset (utf-8) instead of
+ *	encoding the unicode to ascii).
+ *
+ *	This is not widely used and only implemented because
+ *	a few other servers implement it.
+ */
 const parsePlain = exports.parsePlain = function(form) {
-	return (form || '')
+	return form ? form
 		.split('&')
 		.map(x => x.split('='))
 		.reduce((acc, x) => {
 			acc[x[0]] = x[1].replace(/\+/g, ' ');
 			return acc;
-		}, {});
+		}, {}) : {};
 }
 
 /**
@@ -48,7 +60,7 @@ const parsePlain = exports.parsePlain = function(form) {
  *	components, and parses the query string.
  */
 exports.parseUrl = function(input) {
-	const [url, query] = input.split("?");
+	const [url, query] = input ? input.split("?") : ['', ''];
 
 	const queryFields = parseQuery(query);
 

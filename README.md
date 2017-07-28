@@ -1,4 +1,7 @@
 # Sugar Web Library
+[![Build Status](https://travis-ci.org/joeldentici/sugar-web-library.png?branch=master)](https://travis-ci.org/joeldentici/sugar-web-library)
+[![Coverage Status](https://coveralls.io/repos/github/joeldentici/sugar-web-library/badge.png?branch=master)](https://coveralls.io/github/joeldentici/sugar-web-library?branch=master)
+
 Sugar is a web application library for Node.js providing combinators to solve most of the problems faced in creating a typical Web application.
 
 Sugar is heavily influenced by [Suave](https://suave.io) and borrows some of its API. This is not a replica of it though, there are some differences.

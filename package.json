@@ -8,11 +8,29 @@
       "email": "joeldentici@cox.net"
     }
   ],
+  "homepage": "https://github.com/joeldentici/sugar-web-library",
+  "bugs": "https://github.com/joeldentici/sugar-web-library/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joeldentici/sugar-web-library.git"
+  },
   "main": "src/sugar.js",
   "scripts": {
-    "document": "hmdoc 'Sugar Web Library' src markdown > documentation.md"
+    "document": "hmdoc 'Sugar Web Library' src markdown > documentation.md",
+    "testit": "nodeunit test",
+    "coveragelcov": "nyc --reporter=lcov npm run testit",
+    "coverage": "nyc npm run testit",
+    "coveralls": "npm run coveragelcov && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "test": "npm run coveralls"
   },
   "dependencies": {
-    "rx": "^4.1.0"
+    "rx": "^4.1.0",
+    "monadic-js": "^1.1.1"
+  },
+  "devDependencies": {
+    "coveralls": "^2.13.1",
+    "fantasy-check": "^0.3.2",
+    "nodeunit": "^0.11.1",
+    "nyc": "^11.0.3"
   }
 }

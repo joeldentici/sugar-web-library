@@ -37,20 +37,31 @@ function makeContext(contentType, body, headers, method, url) {
 
 function getOutput(context) {
 	return Async.create((succ, fail) => {
-		const res = context.response.content;
+
+		const isEs = context.response.headers['Content-Type'] === 'text/event-stream';
+		const res = isEs ?
+			context.response.content : Sugar.Combinators.Compression.compressStream(
+			context.response.headers['Content-Encoding'],
+			context.response.content
+		);
 
 		let buffers = [];
 		res.on('data', x => buffers.push(x));
 		res.on('end', x => {
-			succ([context, Buffer.concat(buffers).toString()]);
+			succ([context, Buffer.concat(buffers)]);
 		});
 	});
 }
 
-function testWP(type, body, wp, headers, method, url) {
+function testWP2(type, body, wp, headers, method, url) {
 	return makeContext(type, body, headers, method, url)
 		.chain(wp)
 		.chain(getOutput);
+}
+
+function testWP(type, body, wp, headers, method, url) {
+	return testWP2(type, body, wp, headers, method, url)
+		.map(x => [x[0], x[1].toString()]);
 }
 
 exports.Combinators = {
@@ -235,19 +246,53 @@ exports.Combinators = {
 
 		const {toEventStream} = Sugar.Combinators.Events;
 
-		const res = testWP('text/plain', '', toEventStream(events, 100));
+		const res = testWP('text/plain', '', toEventStream(events));
 		const res2 = testWP('text/plain', '', toEventStream(events2));
+		const res3 = testWP('text/plain', '', toEventStream(Rx.Observable.empty().delay(6), 5));
 
-		const all = Async.all(res, res2);
+		const all = Async.all(res, res2, res3);
 
-		all.fork(([x, y]) => {
-			check(x[1], 'data: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\n:keepalive\n\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\n:keepalive\n\nevent: Event\ndata: {"a":5}\n\n');
+		all.fork(([x, y, z]) => {
+			check(x[1], 'data: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\n');
 			check(y[1], 'event: Error\ndata: "Errror!!!"\n\n');
+			check(z[1], ':keepalive\n\n');
 			test.done();
 		}, e => {
 			console.error(e);
 			test.done();
 		});
 		//events.onCompleted();
+	},
+	'compression': test => {
+		const check = eq(test);
+
+		const {OK} = Sugar.Combinators.Successful;
+		const {compress} = Sugar.Combinators.Compression;
+
+		const res = testWP2('text/plain', '', OK("HELLO").arrow(compress), {'accept-encoding': 'gzip, deflate'});
+		const res2 = testWP2('text/plain', '', OK("HELLO").arrow(compress), {'accept-encoding': 'deflate, gzip'});
+		const res3 = testWP2('text/plain', '', OK("HELLO").arrow(compress), {'accept-encoding': 'blah'});
+		const res4 = testWP2('text/plain', '', OK("HELLO").arrow(compress), {});
+
+		const all = Async.all(res, res2, res3, res4);
+
+		const zlib = require('zlib');
+
+		all.fork(([x,y,z,a]) => {
+			const xVal = zlib.gunzipSync(x[1]).toString();
+			const yVal = zlib.inflateSync(y[1]).toString();
+			const zVal = z[1].toString();
+			const aVal = a[1].toString();
+
+			check(xVal, 'HELLO');
+			check(yVal, 'HELLO');
+			check(zVal, 'HELLO');
+			check(aVal, 'HELLO');
+
+			test.done();
+		}, e => {
+			console.error(e);
+			test.done();
+		});		
 	}
 };

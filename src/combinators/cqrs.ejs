@@ -9,6 +9,7 @@ const jwt = require('../util/jwt.ejs');
 const {mime} = require('./output.js');
 const {Async, Utility} = require('monadic-js');
 const {caseOf} = Utility;
+const {compress} = require('./compression.js');
 
 /**
  *	Sugar.Combinators.CQRS
@@ -317,7 +318,7 @@ exports.queryService = function(privateKey, publicKey, alg, blacklist) {
 			if (typeof response === 'object'
 				&& response.size && response.stream
 				&& response.name) {
-				return Files.download(response);
+				return expr { Files.download(response) >=> compress };
 			}
 			//use server-sent events on event streams
 			else if (typeof response === 'object'

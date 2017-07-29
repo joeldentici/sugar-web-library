@@ -81,17 +81,6 @@ function parseMultiPartForm(rawForm) {
 }
 
 /**
- *	getFormParser :: string -> Buffer -> Async Error (Map string (string | FileUpload))
- *
- *	Gets a form parser for a content type. If no
- *	parser is defined for the content type, then a parser
- *	that returns an empty form is returned.
- */
-function getFormParser(contentType) {
-	return formParsers[contentType] || (rawForm => {});
-}
-
-/**
  *	parseForm :: NodeHttpRequest -> Async Error (Map string (string | FileUpload))
  *
  *	Parses the request body to get the form. If there is no
@@ -102,10 +91,10 @@ function parseForm(req) {
 	const contentType = req.headers['content-type'];
 	if (formParsers[contentType]) {
 		return getRawForm(req)
-			.chain(getFormParser(contentType));
+			.chain(formParsers[contentType]);
 	}
 	else {
-		return Async.of(undefined);
+		return Async.of({});
 	}
 }
 
@@ -324,4 +313,6 @@ exports.defaultConfig = function() {
 		}
 	};
 }
-	
+
+exports.parseForm = parseForm;
+exports.createContext = createContext;

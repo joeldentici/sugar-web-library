@@ -9,65 +9,86 @@ monadic.loadDo('.ejs');
  *	Sugar exports all the submodules used by the web application
  *	library.
  *
- *	A few useful functions to dynamically use WebPart combinators
- *	are provided in this module.
+ *	A few useful combinators to dynamically use WebParts
+ *	are provided in this module directly.
  */
 
+/**
+ *	WebPartCombinator :: ...(any ->) WebPart
+ *
+ *	Any type of a function that ultimately results in a WebPart when
+ *	fully applied.
+ *
+ *	This means both constructors of WebParts and functions that combine
+ *	WebParts are considered combinators for the purpose of the documentation
+ *	of this library.
+ */
 
 /**
  *	WebPart :: HttpContext -> Async e HttpContext
  *
- *	WebPart is the type of combinators used in
- *	Sugar.
+ *	WebPart is the type used to construct Sugar applications.
+ *
+ *	WebParts can be constructed and combined using WebPartCombinators
  */
 
+/**
+ *	HttpContext :: {request: HttpRequest, response: HttpResponse, runtime: HttpRuntime}
+ *
+ *	An HttpContext represents the state of an HttpRequest and the response
+ *	that is being built, as it is processed by a Sugar application.
+ */
 
-/*
-HttpRequest = {
-	version: string,
-	url: string,
-	host: string,
-	method: string,
-	headers: object,
-	query: object,
-	form: Form,
-	body: ReadableStream
-}
+/**
+ *	HttpRequest :: Object
+ *
+ *	An object with the following properties:
+ *
+ *	`version - string`
+ *	`url - string`
+ *	`host - string`
+ *	`method - string`
+ *	`headers - Map string string`
+ *	`query - Map string string`
+ *	`form - Form`
+ *	`body - ReadableStream`
+ *
+ *	This represents the HttpRequest that was received by Sugar from
+ *	the underlying node http/https server, after some processing.
+ */
 
-Form = Map string (string | FileUpload)
+/**
+ *	Form :: Map string (string | FileUpload)
+ *
+ *	An object whose fields are either string values
+ *	or file uploads.
+ */
 
-FileUpload = {
-	name: string, 
-	stream: ReadableStream
-}
+/**
+ *	FileUpload :: {name: string, stream: ReadableStream}
+ *
+ *	An object that represents a file upload field in a form.
+ */
 
-File = {
-	size: int,
-	stream: ReadableStream,
-	name: string,
-}
+/**
+ *	File :: {size: int, stream: ReadableStream, name: int}
+ *
+ *	A File can be processed by Sugar.Combinators.Files.{send,download}
+ *	into a WebPart that sends/downloads the file.
+ */
 
-HttpResponse = {
-	status: int,
-	headers: object,
-	content: ReadableStream
-}
+/**
+ *	HttpResponse :: {status: int, headers: Map string string, content: ReadableStream}
+ *
+ *	An object representing what will be sent to the browser/client.
+ */
 
-HttpRuntime {
-	https: bool,
-	port: int,
-	mime: Map string string
-}
-
-HttpContext = {
-	request: HttpRequest,
-	response: HttpResponse,
-	runtime: HttpRuntime
-}
-
-
-*/
-
+/**
+ *	HttpRuntime :: {https: bool, port: int, mime: Map string string}
+ *
+ *	An object representing configuration of the server that might be used
+ *	to change the behavior of the application.
+ */
 
 /**
  *	request :: (HttpRequest -> WebPart) -> WebPart
@@ -106,7 +127,7 @@ exports.context = function(fn) {
  */
 exports.asyncRequest = function(fn) {
 	return function(context) {
-		return fn(context.request).bind(f => f(context));
+		return fn(context.request).chain(f => f(context));
 	}
 }
 
@@ -117,7 +138,7 @@ exports.asyncRequest = function(fn) {
  */
 exports.asyncContext = function(fn) {
 	return function(context) {
-		return fn(context).bind(f => f(context));
+		return fn(context).chain(f => f(context));
 	}
 }
 

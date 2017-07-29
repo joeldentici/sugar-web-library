@@ -24,7 +24,7 @@ const Async = require('monadic-js').Async;
 exports.timeout = function(timespan, part) {
 	return function(context) {
 		const run = part(context);
-		const timed = Async.sleep(timespan).map(_ =>
+		const timed = Async.sleep(timespan).chain(_ =>
 			REQUEST_TIMEOUT('Request Timeout')(context));
 
 		return Async.first(run, timed);

@@ -140,6 +140,11 @@ const algs = {
  *	hmacsha :: int -> (string, string) -> JWTAlgorithm
  *
  *	Constructs an HMAC SHA-bits JWTAlgorithm.
+ *
+ *	This will create a message authentication code for the signature
+ *	using the private key. As HMAC SHA are hash MAC algorithms, we simply
+ *	verify the MAC when authenticating a token by hashing it again and
+ *	comparing the MACs. We do not use the public key at all.
  */
 function hmacsha(bits) {
 	return function(key, _) {

@@ -1,4 +1,4 @@
-const {response, setHeader, mime} = require('./output.js');
+const {response, text, setHeader, mime} = require('./output.js');
 
 /**
  *	Sugar.Combinators.Redirection
@@ -18,7 +18,7 @@ exports.redirect = function(url) {
 	const msg = 'The requested resource has moved here';
 	return setHeader('Location')(url)
 		.arrow(mime('text/html'))
-		.arrow(response(302)(`<html>
+		.arrow(text(302)(`<html>
 			<body>
 				<a href="${url}">${msg}</a>
 			</body>
@@ -42,7 +42,7 @@ exports.NOT_MODIFIED = response(304)('');
  */
 exports.MOVED_PERMANENTLY = function(url) {
 	return setHeader('Location')(url)
-		.arrow(response(301)(''));
+		.arrow(response(301)(Buffer.alloc(0)));
 }
 
 /**
@@ -54,5 +54,5 @@ exports.MOVED_PERMANENTLY = function(url) {
  */
 exports.FOUND = function(url) {
 	return setHeader('Location')(url)
-		.arrow(response(302)(''));
+		.arrow(response(302)(Buffer.alloc(0)));
 }

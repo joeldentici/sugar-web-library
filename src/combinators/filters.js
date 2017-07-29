@@ -117,12 +117,12 @@ function extract(pattern, text) {
 		'%d': x => {
 			const int = Number.parseInt(x);
 			const dub = Number(x);
-			if (int === dub && int !== NaN)
+			if (int === dub && !isNaN(int))
 				return int;
 		},
 		'%f': x => {
 			const dub = Number(x);
-			if (dub !== NaN)
+			if (!isNaN(dub))
 				return dub;
 		},
 		'%s': x => x

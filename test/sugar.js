@@ -27,9 +27,6 @@ function makeTest(contentType, body) {
 	return req;
 }
 
-//not going to even bother testing...
-Sugar.Server.defaultConfig();
-
 exports.Sugar = {
 	'context/request': test => {
 		const check = eq(test);

@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "rx": "^4.1.0",
-    "monadic-js": "^1.1.1"
+    "monadic-js": "^1.1.2"
   },
   "devDependencies": {
     "coveralls": "^2.13.1",

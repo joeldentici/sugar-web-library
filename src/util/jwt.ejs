@@ -39,7 +39,7 @@ class JWT {
 		//verify that we have the requested hash algorithm
 		if (typeof this.algs[alg] !== 'object') {
 			return Either.Left(new Error(
-				'The provided hash algorithm is not supported'));
+				'The provided signing algorithm is not supported'));
 		}
 
 		//create the data to sign
@@ -69,7 +69,7 @@ class JWT {
 	authenticateToken(token, alg = 'HS256') {
 		return do Either {
 			//break token into base64 components
-			[headerB, payloadB, signatureB] = token.split('.')
+			[headerB, payloadB, signatureB] <- split(token)
 
 			//decode header and payload base64 components
 			header <- decode(headerB)
@@ -129,9 +129,11 @@ const AuthError = x => new AuthenticationError(x);
  *
  *	Constructors for the cryptographic algorithms used by JWT
  */
+const none = data => '';
 const algs = {
 	'HS256': hmacsha('256'),
 	'HS512': hmacsha('512'),
+	none: key => ({sign: none, verify: none}),
 }
 
 /**
@@ -182,6 +184,20 @@ function decode(data) {
 }
 
 /**
+ *	split :: Object -> Either Error [string]
+ *
+ *	Attempt to split the incoming token.
+ */
+function split(token) {
+	try {
+		return Either.of(token.split('.'));
+	}
+	catch (e) {
+		return Either.Left(e);
+	}
+}
+
+/**
  *	JWT :: (string, string) -> JWT
  *
  *	Constructs a JWT that uses the specified
@@ -195,4 +211,5 @@ module.exports = function(privateKey, publicKey) {
 
 module.exports.encode = encode;
 module.exports.decode = decode;
+module.exports.split = split;
 module.exports.AuthenticationError = AuthError;

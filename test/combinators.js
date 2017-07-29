@@ -212,5 +212,42 @@ exports.Combinators = {
 			test.ok(false, 'Error should not have happened');
 			test.done();
 		});
+	},
+	'events': test => {
+		const check = eq(test);
+
+		const Rx = require('rx');
+
+		class Event {
+			constructor(a) {
+				this.a = a;
+			}
+		}
+
+		const events = Rx.Observable.interval(10)
+			.map(_ => ({
+				a: 5
+			}))
+			.take(10)
+			.concat(Rx.Observable.interval(10).map(_ => new Event(5)).take(10));
+
+		const events2 = Rx.Observable.throw('Errror!!!');
+
+		const {toEventStream} = Sugar.Combinators.Events;
+
+		const res = testWP('text/plain', '', toEventStream(events, 100));
+		const res2 = testWP('text/plain', '', toEventStream(events2));
+
+		const all = Async.all(res, res2);
+
+		all.fork(([x, y]) => {
+			check(x[1], 'data: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\ndata: {"a":5}\n\n:keepalive\n\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\nevent: Event\ndata: {"a":5}\n\n:keepalive\n\nevent: Event\ndata: {"a":5}\n\n');
+			check(y[1], 'event: Error\ndata: "Errror!!!"\n\n');
+			test.done();
+		}, e => {
+			console.error(e);
+			test.done();
+		});
+		//events.onCompleted();
 	}
 };

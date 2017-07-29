@@ -51,7 +51,7 @@ exports.toEventStream = function(eventStream, keepalive = 20000) {
 		}
 
 		//write errors
-		function writeErr(stream, err) {
+		function writeError(stream, err) {
 			try {
 				const name = 'Error';
 				const data = JSON.stringify(err);

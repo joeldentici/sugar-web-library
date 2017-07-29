@@ -143,5 +143,105 @@ exports.Server = {
 		}, e => {
 			test.done();
 		});
+	},
+	'https config': test => {
+		const check = eq(test);
+
+		const fs = require('fs');
+		const old = fs.readFileSync;
+
+		fs.readFileSync = function(path) {
+			return path;
+		}
+
+		const https = {
+			httpsKey: 'key',
+			httpsCert: 'cert',
+			caCert: 'ca',
+		};
+
+		const https2 = {
+			httpsKey: 'key',
+			httpsCert: 'cert',
+		};
+
+		const httpsConfig = Sugar.Server.httpsConfig;
+
+		check(httpsConfig(https2), {key: 'key', cert: 'cert'});
+		check(httpsConfig(https), {key: 'key', cert: 'cert', ca: 'ca', requestCert: true});
+
+		fs.readFileSync = old;
+
+		test.done();
+	},
+	'add defaults': test => {
+		const check = eq(test);
+		const addDefaults = Sugar.Server.addDefaults;
+		const createContext = Sugar.Server.createContext;
+
+		const req = {headers: {host: 'example.com'}};
+		const req2 = {headers: {}};
+
+		const config = {
+			port: 1111,
+			mime: {},
+			https: false
+		};
+
+		const expected1 = { 
+			runtime: { https: false, port: 1111, mime: {} },
+			request: { 
+				version: undefined,
+				url: '',
+				host: 'example.com',
+				method: undefined,
+				headers: { host: 'example.com' },
+				query: {},
+				form: {},
+				body: { headers: { host: 'example.com' } } 
+			},
+			response: {
+				status: 0,
+				content: '',
+				headers: { 
+					Server: 'Sugar (example.com)', 'Content-Type': 'text/plain' 
+				}
+			} 
+		};
+
+		const expected2 = { 
+			runtime: { https: false, port: 1111, mime: {} },
+			request: { 
+				version: undefined,
+				url: '',
+				host: undefined,
+				method: undefined,
+				headers: { },
+				query: {},
+				form: {},
+				body: { headers: { } } 
+			},
+			response: {
+				status: 0,
+				content: '',
+				headers: { 
+					Server: 'Sugar (localhost)', 'Content-Type': 'text/plain' 
+				}
+			} 
+		};
+
+		const res1 = createContext(req, null, config).chain(x => addDefaults(req)(x));
+		const res2 = createContext(req2, null, config).chain(x => addDefaults(req2)(x));
+
+		const all = Async.all(res1, res2);
+
+		all.fork(([x,y]) => {
+			check(x, expected1);
+			check(y, expected2);
+			test.done();
+		}, e => {
+			test.ok(false, "Shouldn't have error");
+			test.done();
+		});
 	}
 };

@@ -316,3 +316,5 @@ exports.defaultConfig = function() {
 
 exports.parseForm = parseForm;
 exports.createContext = createContext;
+exports.httpsConfig = httpsConfig;
+exports.addDefaults = addDefaults;

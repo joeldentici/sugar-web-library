@@ -294,5 +294,62 @@ exports.Combinators = {
 			console.error(e);
 			test.done();
 		});		
+	},
+	'authentication': test => {
+		const check = eq(test);
+
+		const {authenticateBasic, authenticateJWT} = Sugar.Combinators.Authentication;
+		const {OK} = Sugar.Combinators.Successful;
+		const jwt = Sugar.Utility.JWT;
+
+		//test basic auth
+		const P = OK("Hello");
+
+		const author = (t,u,p) => t + ' ' + Buffer.from(u + ':' + p).toString('base64');
+		const header = (u,p) => author('basic', u, p)
+
+		const authed = authenticateBasic((u,p) => u === 'foo' && p === 'bar', P);
+
+		const res = testWP('text/plain', '', authed, {'authorization': header('foo', 'bar')});
+		const res2 = testWP('text/plain', '', authed, {'authorization': header('foo2', 'bar')});
+		const res3 = testWP('text/plain', '', authed, {'authorization': author('blah', 'foo2', 'bar')});
+		const res4 = testWP('text/plain', '', authed, {});
+
+		//test jwt auth
+		const P2 = (context) => OK('' + context.userToken.userId)(context);
+
+		const auth1 = authenticateJWT('blah', 'blah', 'HS256');
+		const auth2 = authenticateJWT('blah', 'blah', 'HS256', {check: x => Async.fail(new Error('bad'))});
+
+		let j = jwt('blah', 'blah');
+		const token = (userId, alg) => j.createToken({userId}, alg).case({
+			Left: _ => '',
+			Right: v => v,
+		});
+
+		const res5 = testWP('text/plain', '', auth1(P2), {authorization: token(12)});
+		const res6 = testWP('text/plain', '', auth1(P2), {});
+		const res7 = testWP('text/plain', '', auth1(P2), {authorization: token(12, 'HS512')});
+		const res8 = testWP('text/plain', '', auth2(P2), {authorization: token(12)});
+
+		const all = Async.all(res, res2, res3, res4, res5, res6, res7, res8);
+
+		all.fork(([a,b,c,d,e,f, g,h]) => {
+			//basic auth assertions
+			check(a[1], 'Hello');
+			check(b[1], 'Please log in to access this resource');
+			check(c[1], 'Please log in to access this resource');
+			check(d[1], 'Please log in to access this resource');
+			//jwt auth assertions
+			check(e[1], '12');
+			check(f[1], '"You must authenticate to use this resource"');
+			check(g[1], '"The token\'s algorithm does not match the expected algorithm"');
+			check(h[1], '"bad"');
+
+			test.done();
+		}, e => {
+			test.ok(false, e.message);
+			test.done();
+		});
 	}
 };

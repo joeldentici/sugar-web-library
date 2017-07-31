@@ -7,6 +7,95 @@ const {identity, constant} = require('fantasy-combinators');
 
 const {equals, eq} = require('../test-lib.js');
 
+const fs = require('fs');
+
+let files = {
+	'/': {
+		stats: {
+			isFile: () => false,
+			isDirectory: () => true,
+			size: 4096,
+			mtime: 'sometime'
+		}
+	},
+	'/home': {
+		contents: [
+			'abc', 'def.js', 'ghi'
+		],
+		stats: {
+			isFile: () => false,
+			isDirectory: () => true,
+			size: 4096,
+			mtime: 'sometime'
+		}
+	},
+	'/home/abc': {
+		stats: {
+			isFile: () => false,
+			isDirectory: () => true,
+			size: 4096,
+			mtime: 'sometime'
+		},
+		contents: [
+			'index.html',
+		]
+	},
+	'/home/abc/index.html': {
+		stats: {
+			isFile: () => true,
+			isDirectory: () => false,
+			size: Buffer.byteLength(
+				Buffer.from('<h1>HI</h1>')),
+			mtime: 'sometime',
+		},
+		data: '<h1>HI</h1>'
+	},
+	'/home/def.js': {
+		stats: {
+			isFile: () => true,
+			isDirectory: () => false,
+			size: Buffer.byteLength(
+				Buffer.from('alert("HELLO")')),
+			mtime: 'sometime',
+		},
+		data: 'alert("HELLO")',
+	},
+	'/home/ghi': {
+		stats: {
+			isFile: () => true,
+			isDirectory: () => false,
+			size: 4096,
+			mtime: 'sometime',
+		}
+	},
+	'/home/sadf': {
+		stats: {
+			isFile: () => false,
+			isDirectory: () => false,
+		}
+	}
+};
+
+fs.stat = (path, cb) => {
+	console.log('stat', path);
+	cb(null, files[path].stats);
+}
+
+fs.readdir = (path, cb) => {
+	console.log('read', path);
+	cb(null, files[path].contents);
+}
+
+fs.createReadStream = (path, cb) => {
+	const stream = new require('stream').PassThrough();
+
+	const data = Buffer.from(files[path].data);
+
+	stream.end(data);
+
+	return stream;
+}
+
 const Sugar = require('../src/sugar.js');
 
 const monadic = require('monadic-js');
@@ -351,5 +440,50 @@ exports.Combinators = {
 			test.ok(false, e.message);
 			test.done();
 		});
+	},
+	files: test => {
+		const check = eq(test);
+
+		const {toHTML, resolvePath, browsePath} = Sugar.Combinators.Files;
+		const {OK} = Sugar.Combinators.Successful;
+
+		try {
+			resolvePath('/home', '/../../s');
+			test.ok(false, 'bad path check');
+		}
+		catch (e) {
+			test.ok(true, 'bad path check');
+		}
+
+		const res = testWP('text/plain', '', browsePath('/home', ''), {}, 'GET', '/');
+		const expected = toHTML('/', [
+			['.', files['/home'].stats],
+			['..', files['/'].stats],
+			['abc', files['/home/abc'].stats],
+			['def.js', files['/home/def.js'].stats],
+			['ghi', files['/home/ghi'].stats]
+		]);
+		const res2 = testWP('text/plain', '', browsePath('/home', ''), {}, 'HEAD', '/');
+		const res3 = testWP('text/plain', '', browsePath('/home', ''), {}, 'GET', '/def.js');
+		const res4 = testWP('text/plain', '', browsePath('/home', ''), {}, 'GET', '/abc');
+		const res5 = testWP('text/plain', '', browsePath('/home', '').alt(OK("good")), {}, 'GET', '/sadf');
+		const res6 = testWP('text/plain', '', browsePath('/home', ''), {range: '2-5'}, 'GET', '/def.js');
+
+		const all = Async.all(res, res2, res3, res4, res5, res6);
+
+		all.fork(([a, b, c, d, e, f]) => {
+			check(b[0].response.headers['Accept-Ranges'], 'none');
+			check(a[1], expected);
+			check(c[1], 'alert("HELLO")');
+			check(d[1], '<h1>HI</h1>');
+			check(e[1], 'good');
+			check(f[1], 'alert("HELLO")');
+			check(f[0].response.status, 206);
+			test.done();
+		}, e => {
+			console.error(e);
+			test.ok(false, "BAH");
+			test.done();
+		})
 	}
 };

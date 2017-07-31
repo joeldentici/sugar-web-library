@@ -28,10 +28,20 @@ const {mapM} = require('monadic-js').Utility;
  *	and not actually download the file to the file system).
  */
 
+/**
+ *	emoji :: String
+ *
+ *	A base64 encode string containing the emoji font we use for the directory
+ *	and file icons. It is a bit unfortunate that we are loading a whole font
+ *	for two unicode characters.
+ *
+ *	This is done so we don't need to worry about handling some strange route
+ *	to load the font -- we just send it inline with the directory listing.
+ */
 const emoji = fs.readFileSync(path.join(__dirname, 'emoji.txt')).toString();
 
 /**
- *	stat :: string -> Async Error Object
+ *	stat :: string -> Async Error Stat
  *
  *	Stats a file on the local filesystem.
  */
@@ -70,46 +80,47 @@ function displaySize(size, decSig) {
 }
 
 /**
- *	directoryListing :: string -> string -> Async Error File
+ *	toHTML :: [(string, Stat)] -> string
  *
- *	Creates an HTML directory listing from a directory.
+ *	Given a directory listing (a list of tuples of
+ *	file names and stats), creates an HTML representation
+ *	of the directory that supports navigation.
  */
-function directoryListing(dirPath, urlPath, range) {
-	function toHTML(files) {
-		const getPath = (file) => path.join(urlPath, file);
+function toHTML(urlPath, files) {
+	const getPath = (file) => path.join(urlPath, file);
 
-		const upOne = path.join(urlPath, '..');
+	const upOne = path.join(urlPath, '..');
 
-		const dirs = files.filter(([n,s]) => s.isDirectory());
-		const actualFiles = files.filter(([n,s]) => s.isFile());
+	const dirs = files.filter(([n,s]) => s.isDirectory());
+	const actualFiles = files.filter(([n,s]) => s.isFile());
 
-		const c = b => b ? 'file' : 'folder';
+	const c = b => b ? 'file' : 'folder';
 
-		const showFiles = files => files.map(([x, stats]) =>
-			 `
-			 <tr>
-			 	<td class="icon ${c(stats.isFile())}">
-			 		${stats.isFile() ? '&#x1F4C4;': '&#x1F4C2;'}
-			 	</td>
-			 	<td class="name">
-			 		<a href="${getPath(x)}">${x}</a>
-			 	</td>
-			 	<td>
-			 		${displaySize(stats.size)}
-			 	</td>
-			 	<td>
-			 		${stats.mtime}
-			 	</td>
-			 </tr>
-			 `).join('\n\t\t\t');
+	const showFiles = files => files.map(([x, stats]) =>
+		 `
+		 <tr>
+		 	<td class="icon ${c(stats.isFile())}">
+		 		${stats.isFile() ? '&#x1F4C4;': '&#x1F4C2;'}
+		 	</td>
+		 	<td class="name">
+		 		<a href="${getPath(x)}">${x}</a>
+		 	</td>
+		 	<td>
+		 		${displaySize(stats.size)}
+		 	</td>
+		 	<td>
+		 		${stats.mtime}
+		 	</td>
+		 </tr>
+		 `).join('\n\t\t\t');
 
-		const gradient = (start, end) => `
-			background: linear-gradient(to bottom right, ${start}, ${end});
-			color: transparent;
-			-webkit-background-clip: text;
-		`;
+	const gradient = (start, end) => `
+		background: linear-gradient(to bottom right, ${start}, ${end});
+		color: transparent;
+		-webkit-background-clip: text;
+	`;
 
-		const output = `<!DOCTYPE html>
+	const output = `<!DOCTYPE html>
 <html>
 	<head>
 		<title>Directory Listing - ${urlPath}</title>
@@ -161,9 +172,17 @@ function directoryListing(dirPath, urlPath, range) {
 		</table>
 	</body>
 </html>`;
-		return output;
-	}
+	return output;
+}
 
+exports.toHTML = toHTML;
+
+/**
+ *	directoryListing :: (string, string, RangeObject) -> Async Error File
+ *
+ *	Creates an HTML directory listing from a directory.
+ */
+function directoryListing(dirPath, urlPath, range) {
 	function toStream(buffer) {
 		const stream = new PassThrough();
 		stream.end(buffer);
@@ -195,7 +214,7 @@ function directoryListing(dirPath, urlPath, range) {
 			//otherwise create and return a directory listing
 			else {
 				return Async.unit(files)
-					.map(toHTML)
+					.map(x => toHTML(urlPath, x))
 					.map(listing => createFile(
 						'directory.html',
 						toStream(Buffer.from(listing)),
@@ -206,7 +225,7 @@ function directoryListing(dirPath, urlPath, range) {
 }
 
 /**
- *	getRange :: HttpRequest -> Object
+ *	getRange :: HttpRequest -> RangeObject
  *
  *	Parses the range header of an HTTP Request and
  *	returns an object containing the range.
@@ -226,7 +245,7 @@ const getRange = exports.getRange = function(request) {
 }
 
 /**
- *	createFile :: string -> ReadableStream -> int -> Object
+ *	createFile :: (string, ReadableStream, int, RangeObject) -> File
  *
  *	Creates a new File object using the specified parameters.
  *
@@ -366,7 +385,7 @@ const download = exports.download = function(file) {
 
 
 /**
- *	doFile :: (File -> WebPart) -> Object -> Async () WebPart
+ *	doFile :: (File -> WebPart) -> Object -> Async Error WebPart
  *
  *	Reads a file from disk, then maps it to the appropriate
  *	web part by applying the provided action.
@@ -378,14 +397,14 @@ function doFile(action) {
 }
 
 /**
- *	downloadFile :: string -> Async () WebPart
+ *	downloadFile :: string -> Async Error WebPart
  *
  *	Loads a file from disk asynchronously and then maps it
  *	to a web part that will download the file.
  */
 const downloadFile = exports.downloadFile = doFile(download);
 /**
- *	sendFile :: string -> Async () WebPart
+ *	sendFile :: string -> Async Error WebPart
  *
  *	Loads a file from disk asynchronously and then maps it
  *	to a web part that will send the file.
@@ -393,7 +412,7 @@ const downloadFile = exports.downloadFile = doFile(download);
 const sendFile = exports.sendFile = doFile(send);
 
 /**
- *	resolvePath :: string -> string -> string
+ *	resolvePath :: (string, string) -> string
  *
  *	Resolves the file name provided relative to the root
  *	path provided. The resulting path is guaranteed to be
@@ -416,7 +435,7 @@ const resolvePath = exports.resolvePath = function(rootPath, fileName) {
 }
 
 /**
- *	browse :: string -> (string -> string) -> WebPart
+ *	browse :: (string, (string -> string)) -> WebPart
  *
  *	Returns a WebPart that allows the user to
  *	browse a portion of the file system. Takes
@@ -433,7 +452,7 @@ const browse = exports.browse = function(rootPath, urlMap = (x => x)) {
 }
 
 /**
- *	browsePath :: string -> string -> WebPart
+ *	browsePath :: (string, string) -> WebPart
  *
  *	Browse relative to the rootPath on the file system, excluding
  *	startPath from the URL.

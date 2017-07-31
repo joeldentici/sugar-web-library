@@ -1,6 +1,6 @@
 {
   "name": "sugar-web-library",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A web application library based on composable combinators.",
   "contributors": [
     {

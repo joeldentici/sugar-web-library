@@ -23,8 +23,6 @@ Sugar provides combinators and operators for handling many common tasks when con
 Keep reading to see how you can use these things.
 
 ## Installation
-Currently not on NPM. First `monadic-js` needs to be completed and put on NPM.
-
 Run `npm install --save sugar-web-library`.
 
 ## Hello, World!

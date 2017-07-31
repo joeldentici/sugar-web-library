@@ -29,8 +29,8 @@ Click a module name below to see its documentation
 Sugar exports all the submodules used by the web application
 library.
 
-A few useful functions to dynamically use WebPart combinators
-are provided in this module.
+A few useful combinators to dynamically use WebParts
+are provided in this module directly.
 #### asyncContext :: (HttpContext &#8594; Async WebPart) &#8594; WebPart
 
 See asyncRequest
@@ -46,6 +46,43 @@ not have to worry about piping the context in themselves.
 
 See request, but lets the application inspect
 the context instead.
+#### File :: {size: int, stream: ReadableStream, name: int}
+
+A File can be processed by Sugar.Combinators.Files.{send,download}
+into a WebPart that sends/downloads the file.
+#### FileUpload :: {name: string, stream: ReadableStream}
+
+An object that represents a file upload field in a form.
+#### Form :: Map string (string | FileUpload)
+
+An object whose fields are either string values
+or file uploads.
+#### HttpContext :: {request: HttpRequest, response: HttpResponse, runtime: HttpRuntime}
+
+An HttpContext represents the state of an HttpRequest and the response
+that is being built, as it is processed by a Sugar application.
+#### HttpRequest :: Object
+
+An object with the following properties:
+
+`version - string`
+`url - string`
+`host - string`
+`method - string`
+`headers - Map string string`
+`query - Map string string`
+`form - Form`
+`body - ReadableStream`
+
+This represents the HttpRequest that was received by Sugar from
+the underlying node http/https server, after some processing.
+#### HttpResponse :: {status: int, headers: Map string string, content: ReadableStream}
+
+An object representing what will be sent to the browser/client.
+#### HttpRuntime :: {https: bool, port: int, mime: Map string string}
+
+An object representing configuration of the server that might be used
+to change the behavior of the application.
 #### request :: (HttpRequest &#8594; WebPart) &#8594; WebPart
 
 Allows application code to easily get access to
@@ -53,8 +90,17 @@ an outstanding HttpRequest and return a WebPart
 based off of it.
 #### WebPart :: HttpContext &#8594; Async e HttpContext
 
-WebPart is the type of combinators used in
-Sugar.
+WebPart is the type used to construct Sugar applications.
+
+WebParts can be constructed and combined using WebPartCombinators
+#### WebPartCombinator :: ...(any &#8594;) WebPart
+
+Any type of a function that ultimately results in a WebPart when
+fully applied.
+
+This means both constructors of WebParts and functions that combine
+WebParts are considered combinators for the purpose of the documentation
+of this library.
 ## Sugar.Combinators.Authentication
 <a name="sugar-combinators-authentication"></a>
 **Written By:** Joel Dentici
@@ -323,30 +369,30 @@ it can be provided to the send or download combinators, depending
 on what you would like the user's browser to do with the file (note
 that the browser can choose to ignore the headers set by download
 and not actually download the file to the file system).
-#### browse :: string &#8594; (string &#8594; string) &#8594; WebPart
+#### browse :: (string, (string &#8594; string)) &#8594; WebPart
 
 Returns a WebPart that allows the user to
 browse a portion of the file system. Takes
 the root path to browse at and a function to map
 paths. Handles path resolution.
-#### browsePath :: string &#8594; string &#8594; WebPart
+#### browsePath :: (string, string) &#8594; WebPart
 
 Browse relative to the rootPath on the file system, excluding
 startPath from the URL.
-#### createFile :: string &#8594; ReadableStream &#8594; int &#8594; Object
+#### createFile :: (string, ReadableStream, int, RangeObject) &#8594; File
 
 Creates a new File object using the specified parameters.
 
 If a range is specified, the File will be sent as a partial
 response when send is used.
-#### directoryListing :: string &#8594; string &#8594; Async Error File
+#### directoryListing :: (string, string, RangeObject) &#8594; Async Error File
 
 Creates an HTML directory listing from a directory.
 #### displaySize :: int &#8594; string
 
 Returns a human readable representation
 of the provided size (which should be in bytes)
-#### doFile :: (File &#8594; WebPart) &#8594; Object &#8594; Async () WebPart
+#### doFile :: (File &#8594; WebPart) &#8594; Object &#8594; Async Error WebPart
 
 Reads a file from disk, then maps it to the appropriate
 web part by applying the provided action.
@@ -357,11 +403,19 @@ a file with a specified file name. The file is sent in an HTTP 200 OK
 response. This is equivalent to send, but will attempt to force a browser
 to download the file and will suggest that the browser uses the file name
 provided by the file object.
-#### downloadFile :: string &#8594; Async () WebPart
+#### downloadFile :: string &#8594; Async Error WebPart
 
 Loads a file from disk asynchronously and then maps it
 to a web part that will download the file.
-#### getRange :: HttpRequest &#8594; Object
+#### emoji :: String
+
+A base64 encode string containing the emoji font we use for the directory
+and file icons. It is a bit unfortunate that we are loading a whole font
+for two unicode characters.
+
+This is done so we don't need to worry about handling some strange route
+to load the font -- we just send it inline with the directory listing.
+#### getRange :: HttpRequest &#8594; RangeObject
 
 Parses the range header of an HTTP Request and
 returns an object containing the range.
@@ -371,7 +425,7 @@ Opens a file on the local filesystem.
 #### readdir :: string &#8594; Async Error [string]
 
 Reads the files in a directory.
-#### resolvePath :: string &#8594; string &#8594; string
+#### resolvePath :: (string, string) &#8594; string
 
 Resolves the file name provided relative to the root
 path provided. The resulting path is guaranteed to be
@@ -391,13 +445,18 @@ then the mime type will be used
 
 Otherwise, 'application/octet-stream' will be used, which
 will cause most browsers to download the file
-#### sendFile :: string &#8594; Async () WebPart
+#### sendFile :: string &#8594; Async Error WebPart
 
 Loads a file from disk asynchronously and then maps it
 to a web part that will send the file.
-#### stat :: string &#8594; Async Error Object
+#### stat :: string &#8594; Async Error Stat
 
 Stats a file on the local filesystem.
+#### toHTML :: [(string, Stat)] &#8594; string
+
+Given a directory listing (a list of tuples of
+file names and stats), creates an HTML representation
+of the directory that supports navigation.
 ## Sugar.Combinators.Filters
 <a name="sugar-combinators-filters"></a>
 **Written By:** Joel Dentici
@@ -706,11 +765,6 @@ change properties of the web server.
 
 Map content types to functions that will
 parse the request body.
-#### getFormParser :: string &#8594; Buffer &#8594; Async Error (Map string (string | FileUpload))
-
-Gets a form parser for a content type. If no
-parser is defined for the content type, then a parser
-that returns an empty form is returned.
 #### getRawForm :: NodeHttpRequest &#8594; Async () Buffer
 
 Extracts the data from the Node HTTP Server Request.
@@ -793,6 +847,11 @@ base64 string.
 #### hmacsha :: int &#8594; (string, string) &#8594; JWTAlgorithm
 
 Constructs an HMAC SHA-bits JWTAlgorithm.
+
+This will create a message authentication code for the signature
+using the private key. As HMAC SHA are hash MAC algorithms, we simply
+verify the MAC when authenticating a token by hashing it again and
+comparing the MACs. We do not use the public key at all.
 #### JWT :: (string, string) &#8594; JWT
 
 Constructs a JWT that uses the specified
@@ -802,6 +861,9 @@ key is used).
 #### new :: (string, string) &#8594; JWT
 
 Constructs a JWT
+#### split :: Object &#8594; Either Error [string]
+
+Attempt to split the incoming token.
 ## Sugar.Utility.Parsers
 <a name="sugar-utility-parsers"></a>
 **Written By:** Joel Dentici
@@ -815,6 +877,16 @@ Node's http module already does most of the parsing of the HTTP request,
 but these functions allow us to do some of the additional
 parsing that allows providing the application developer with request
 parameters (form data, query string data, etc.).
+#### parsePlain :: string &#8594; Map string string
+
+Parses a text/plain encoded form, which is the same
+as parsing a URI encoded form, but without decoding
+any special symbols (I believe this is someone trying
+to get unicode in with a charset (utf-8) instead of
+encoding the unicode to ascii).
+
+This is not widely used and only implemented because
+a few other servers implement it.
 #### parseQuery :: string &#8594; Map string string
 
 Takes a URI Encoded form and parses it into

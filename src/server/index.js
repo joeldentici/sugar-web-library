@@ -87,9 +87,9 @@ function parseMultiPartForm(rawForm) {
  *	parser for the content type of the request, then no request
  *	data is read and the form is undefined.
  */
-function parseForm(req) {
+function parseForm(req, shouldParse) {
 	const contentType = req.headers['content-type'];
-	if (formParsers[contentType]) {
+	if (formParsers[contentType] && shouldParse) {
 		return getRawForm(req)
 			.chain(formParsers[contentType]);
 	}
@@ -119,9 +119,9 @@ function getRawForm(req) {
  *	before mapping it to a Sugar HTTP Request and returning it in
  *	a Async.
  */
-function parseRequest(req) {
+function parseRequest(req, config) {
 	//parse the request body to get form
-	const getForm = parseForm(req);
+	const getForm = parseForm(req, config.parseForm);
 	//parse the URL to get path and query params/arguments
 	const [url, query] = parseUrl(req.url);
 
@@ -145,7 +145,7 @@ function parseRequest(req) {
  *	node HTTP server to create a Sugar HttpContext
  */
 function createContext(req, res, config) {
-	return parseRequest(req)
+	return parseRequest(req, config)
 		.map(request => ({
 			request,
 			response: {
@@ -310,7 +310,8 @@ exports.defaultConfig = function() {
 			'.html': 'text/html',
 			'.htm': 'text/html',
 			'.txt': 'text/plain',
-		}
+		},
+		parseForm: true,
 	};
 }
 

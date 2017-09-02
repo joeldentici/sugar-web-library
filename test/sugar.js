@@ -23,6 +23,7 @@ function makeTest(contentType, body) {
 
 	req.end(data);
 	req.headers = headers;
+	req.connection = {remoteAddress: '1'}
 
 	return req;
 }

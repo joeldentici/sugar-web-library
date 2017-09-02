@@ -77,12 +77,10 @@ let files = {
 };
 
 fs.stat = (path, cb) => {
-	console.log('stat', path);
 	cb(null, files[path].stats);
 }
 
 fs.readdir = (path, cb) => {
-	console.log('read', path);
 	cb(null, files[path].contents);
 }
 
@@ -112,6 +110,7 @@ function makeTest(contentType, body, headers = {}, method, url) {
 	req.headers = headers;
 	req.method = method;
 	req.url = url;
+	req.connection = {remoteAddress: '1'}
 
 	return req;
 }
@@ -127,10 +126,10 @@ function makeContext(contentType, body, headers, method, url) {
 function getOutput(context) {
 	return Async.create((succ, fail) => {
 
-		const isEs = context.response.headers['Content-Type'] === 'text/event-stream';
+		const isEs = context.response.headers['content-type'] === 'text/event-stream';
 		const res = isEs ?
 			context.response.content : Sugar.Combinators.Compression.compressStream(
-			context.response.headers['Content-Encoding'],
+			context.response.headers['content-encoding'],
 			context.response.content
 		);
 
@@ -186,7 +185,6 @@ exports.Combinators = {
 
 			test.done();
 		}, e => {
-			console.log("WTF");
 			console.error(e);
 			test.done();
 		});
@@ -204,9 +202,10 @@ exports.Combinators = {
 		const all = Async.all(res1, res2, res3);
 
 		all.fork(([x,y,z]) => {
-			check(x[0].response.headers, {'Content-Type': 'text/html', 'Content-Length': 0});
-			check(y[0].response.headers, {'Content-Encoding': 'gzip'});
-			check(z[0].response.headers, {'Content-Length': 0});
+			check(x[0].response.headers, {'content-type': 'text/html', 'content-length': 0});
+			check(y[0].response.headers, {'content-encoding': 'gzip'});
+			check(z[0].response.headers, {'content-length': 0});
+
 			test.done();
 
 		}, e => {
@@ -255,7 +254,7 @@ exports.Combinators = {
 			check(y[0].response.status, 302);
 			check(z[0].response.status, 301);
 
-			const c = x => check(x.response.headers.Location, 'google.com');
+			const c = x => check(x.response.headers.location, 'google.com');
 
 			c(x[0]);
 			c(y[0]);
@@ -472,7 +471,7 @@ exports.Combinators = {
 		const all = Async.all(res, res2, res3, res4, res5, res6);
 
 		all.fork(([a, b, c, d, e, f]) => {
-			check(b[0].response.headers['Accept-Ranges'], 'none');
+			check(b[0].response.headers['accept-ranges'], 'none');
 			check(a[1], expected);
 			check(c[1], 'alert("HELLO")');
 			check(d[1], '<h1>HI</h1>');

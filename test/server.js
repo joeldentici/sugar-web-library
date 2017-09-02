@@ -38,11 +38,11 @@ exports.Server = {
 
 		const json = JSON.stringify({a: 'b', c: 'd'});
 
-		const test1 = parseForm(makeTest('application/x-www-form-urlencoded', 'a=b&c=d'));
-		const test2 = parseForm(makeTest('text/plain', 'a=b&c=d'));
-		const test3 = parseForm(makeTest('text/json', json));
-		const test4 = parseForm(makeTest('application/json', json));
-		const test5 = parseForm(makeTest('blah', json));
+		const test1 = parseForm(makeTest('application/x-www-form-urlencoded', 'a=b&c=d'), true);
+		const test2 = parseForm(makeTest('text/plain', 'a=b&c=d'), true);
+		const test3 = parseForm(makeTest('text/json', json), true);
+		const test4 = parseForm(makeTest('application/json', json), true);
+		const test5 = parseForm(makeTest('blah', json), true);
 
 		
 		const all = Async.all(test1, test2, test3, test4, test5);
@@ -65,7 +65,7 @@ exports.Server = {
 
 		const json = 'asdfsadf;;dsf;;';
 
-		const test1 = parseForm(makeTest('text/json', json));
+		const test1 = parseForm(makeTest('text/json', json), true);
 
 		test1.fork(x => {
 			test.ok(false, 'Should have failed');
@@ -82,7 +82,7 @@ exports.Server = {
 
 		const form = 'asdfsadf;;dsf;;';
 
-		const test1 = parseForm(makeTest('multipart/form-data', form));
+		const test1 = parseForm(makeTest('multipart/form-data', form), true);
 
 		test1.fork(x => {
 			test.ok(false, 'Should have failed');
@@ -179,8 +179,8 @@ exports.Server = {
 		const addDefaults = Sugar.Server.addDefaults;
 		const createContext = Sugar.Server.createContext;
 
-		const req = {headers: {host: 'example.com'}};
-		const req2 = {headers: {}};
+		const req = {headers: {host: 'example.com'}, connection: {remoteAddress: '1'}};
+		const req2 = {headers: {}, connection: {remoteAddress: '1'}};
 
 		const config = {
 			port: 1111,
@@ -194,17 +194,20 @@ exports.Server = {
 				version: undefined,
 				url: '',
 				host: 'example.com',
+				ip: '1',
 				method: undefined,
 				headers: { host: 'example.com' },
 				query: {},
 				form: {},
-				body: { headers: { host: 'example.com' } } 
+				body: { headers: { host: 'example.com' },
+					connection: {remoteAddress: '1'}
+				} 
 			},
 			response: {
 				status: 0,
 				content: '',
 				headers: { 
-					Server: 'Sugar (example.com)', 'Content-Type': 'text/plain' 
+					server: 'Sugar (example.com)', 'content-type': 'text/plain' 
 				}
 			} 
 		};
@@ -215,17 +218,20 @@ exports.Server = {
 				version: undefined,
 				url: '',
 				host: undefined,
+				ip: '1',
 				method: undefined,
 				headers: { },
 				query: {},
 				form: {},
-				body: { headers: { } } 
+				body: { headers: { },
+					connection: {remoteAddress: '1'}
+				} 
 			},
 			response: {
 				status: 0,
 				content: '',
 				headers: { 
-					Server: 'Sugar (localhost)', 'Content-Type': 'text/plain' 
+					server: 'Sugar (localhost)', 'content-type': 'text/plain' 
 				}
 			} 
 		};
@@ -240,6 +246,7 @@ exports.Server = {
 			check(y, expected2);
 			test.done();
 		}, e => {
+			console.log(e);
 			test.ok(false, "Shouldn't have error");
 			test.done();
 		});

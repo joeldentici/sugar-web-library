@@ -100,9 +100,11 @@ exports.path = function(pathStr) {
  */
 exports.pathStarts = function(pathStr) {
 	return test(
-		ctx => toPath(ctx.request.url)
-			.startsWith(toPath(pathStr)),
-		'Path match failure');
+		ctx => path.posix
+			.relative(pathStr, ctx.request.url)
+			.indexOf('..') === -1,
+		'Path starts: match failure'
+	);
 }
 
 /**

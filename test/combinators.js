@@ -282,7 +282,8 @@ exports.Combinators = {
 		const res2 = testWP('text/plain', '', OK('').arrow(DELETE).alt(OK('good')), {}, 'PUT');
 		const res3 = testWP('text/plain', '', OK('').arrow(path('/a')).arrow(OK('good')), {}, 'GET', '/a');
 		const res4 = testWP('text/plain', '', OK('').arrow(path('/a')).alt(OK('good')), {}, 'GET', '/ab');
-		const res5 = testWP('text/plain', '', OK('').arrow(pathStarts('/a')).arrow(OK('good')), {}, 'GET', '/ab');
+		const res5 = testWP('text/plain', '', OK('').arrow(pathStarts('/a')).alt(OK('good')), {}, 'GET', '/ab');
+		const res55 = testWP('text/plain', '', OK('').arrow(pathStarts('/a')).arrow(OK('good')), {}, 'GET', '/a/b');
 		const res6 = testWP('text/plain', '', OK('').arrow(pathStarts('/a')).alt(OK('good')), {}, 'GET', '/b');
 		const res7 = testWP('text/plain', '', OK('').arrow(pathMatch('/%d/%f/%s', blah)), {}, 'GET', '/5/3.7/abc');
 		const res8 = testWP('text/plain', '', OK('').arrow(pathMatch('/%d/%f/%s', blah)).alt(OK('good')), {}, 'GET', '/5.5/g/abc');
@@ -292,14 +293,15 @@ exports.Combinators = {
 		const res10 = testWP('text/plain', '',
 			choose(DELETE, PUT).alt(OK('good')),
 		  {}, 'GET', '/5.5/g/abc');
-		const all = Async.all(res, res2, res3, res4, res5, res6, res7, res8, res9, res10);
+		const all = Async.all(res, res2, res3, res4, res5, res55, res6, res7, res8, res9, res10);
 
-		all.fork(([x,y,z,a,b,c,d,e,f,g]) => {
+		all.fork(([x,y,z,a,b, bb, c,d,e,f,g]) => {
 			check(x[1], 'good');
 			check(y[1], 'good');
 			check(z[1], 'good');
 			check(a[1], 'good');
 			check(b[1], 'good');
+			check(bb[1], 'good');
 			check(c[1], 'good');
 			check(d[1], '5,3.7,abc');
 			check(e[1], 'good');

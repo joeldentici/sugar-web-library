@@ -130,6 +130,7 @@ function parseRequest(req, config) {
 		version: req.httpVersion,
 		url,
 		host: req.headers.host,
+		ip: req.connection.remoteAddress,
 		method: req.method,
 		headers: req.headers,
 		query,
@@ -244,9 +245,12 @@ function startWebServer(config, app, verbose = 0) {
 				res.writeHead(x.response.status, x.response.headers);
 
 				//get compressed content, if we are compressing
-				const content = compressStream(
-					x.response.headers['Content-Encoding'],
-					x.response.content);
+				let content = x.response.content;
+				if (!x.runtime.proxyCompressed) {
+					content = compressStream(
+						x.response.headers['content-encoding'],
+						x.response.content);
+				}
 
 				//close the content stream if the request ends
 				//while we are sending data so resources can

@@ -157,6 +157,7 @@ exports.Combinators = {
 	RequestErrors: require('./combinators/requesterrors.js'),
 	ServerErrors: require('./combinators/servererrors.js'),
 	Successful: require('./combinators/successful.js'),
+	Proxy: require('./combinators/proxy.ejs'),
 };
 exports.Utility = {
 	Parsers: require('./util/parsers.js'),

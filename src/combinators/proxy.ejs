@@ -1,0 +1,177 @@
+const {response, setHeader} = require('./output.js');
+const {Utility, Async} = require('monadic-js');
+
+const http = require('http');
+const https = require('https');
+
+/**
+ *	Sugar.Combinators.Proxy
+ *	written by Joel Dentici
+ *	on 8/2/2017
+ *
+ *	Combinators for proxying HTTP requests to another
+ *	server.
+ */
+
+/**
+ *	HttpRequestInfo :: Object
+ *
+ *	An object with the following properties:
+ *
+ *	url - string
+ *	method - string
+ *	headers - string
+ *
+ *	These properties specify how the proxy agent
+ *	will make the proxied request. The data for the
+ *	request will be the same as the original.
+ */
+
+const ignore = new Set([
+	'server',
+	'date',
+	'connection'
+]);
+
+function setProxied(encoding) {
+	return context => {
+		const newContext = Object.assign({}, context, {
+			runtime: Object.assign({}, context.runtime, {
+				proxyCompressed: !!encoding
+			})
+		});
+
+		return Async.of(newContext);		
+	}
+
+}
+
+function parseForwarded(forwarded = '') {
+	return forwarded.split(';')
+		.map(x => x.split('=').map(x => x.trim()))
+		.reduce(
+			(acc, [k,v]) => {
+				acc[k] = v;
+				return acc;
+			}, {}
+		);
+}
+
+function get(forwarded, what) {
+	const info = parseForwarded(forwarded);
+
+	return info[what];
+}
+
+function forwardInfo(context) {
+	const ip = get(
+		context.request.headers['forwarded'],
+		'for'
+	) || context.request.ip;
+
+	const by = get(
+		context.request.headers['forwarded'],
+		'by'
+	) || context.request.headers.host;
+
+	const proto = get(
+		context.request.headers['forwarded'],
+		'proto'		
+	) || context.runtime.https ? 'https' : 'http';
+
+	return `for=${ip}; proto=${proto}; by=${by}`;
+}
+
+function header(h, v) {
+	let action = setHeader(h)(v);
+
+	if (h === 'content-encoding') {
+		action = expr {
+			action >=> setHeader('content-length')(undefined)
+		};
+	}
+
+	return action;
+}
+
+/**
+ *	proxy :: (HttpRequest -> HttpRequestInfo) -> WebPart
+ *
+ *	Proxy an HTTP request. The specified function is applied
+ *	to every request to get an object describing where to make
+ *	the proxied request.
+ *
+ *	The data for the proxied request is exactly that of the
+ *	original request. Due to this, you must set `parseForm` to
+ *	false in your Sugar server config. To use form parsing with
+ *	a server that does proxying, you must manually parse each form
+ *	in your routes. If you do not set `parseForm` to false, then there
+ *	will be no data left to pipe to the proxied request. At a later time,
+ *	we may buffer the request body when automatically parsing a form, thus
+ *	making a new request body stream available.
+ */
+function proxy(forward) {
+	return context => Async.create((succ, fail) => {
+		const r = forward(context.request);
+
+		const defPort = {
+			http: 80,
+			https: 443,
+		};
+
+		const requestFn = {
+			http: http.request.bind(http),
+			https: https.request.bind(https)
+		};
+
+		//extract options from HttpRequestInfo url
+		const [_, proto, host, port, path] = r.url.match(
+			/^(http|https):\/\/(.*?)(:[0-9]+)?(\/.*)$/);
+
+		//create options for the request
+		const options = {
+			host,
+			path,
+			port: port.replace(/:/, '') || defPort[proto],
+			method: r.method,
+			headers: Object.assign({}, r.headers, {
+				'Forwarded': forwardInfo(context)
+			}),
+		};
+
+		//choose the request function to use
+		const request = requestFn[proto];
+
+		//make the http request
+		const req = request(options, res => {
+			const headers = res.headers;
+
+			const run = Object.keys(headers)
+				.filter(h => !ignore.has(h.toLowerCase()))
+				.reduce(
+					(acc, h) => expr {
+						acc >=> header(h, headers[h])
+					},
+					response(res.statusCode)(res)
+				);
+
+			const proxy = expr {
+				setProxied(headers['content-encoding']) >=> run
+			};
+
+			proxy(context).fork(succ, fail);
+		});
+
+		//if request fails for any reason, fail running
+		//this WebPart
+		req.on('error', e => fail(e));
+
+		//pipe the request data from Sugar context
+		//into our forwarded request
+		context.request.body.pipe(req);
+	});
+}
+
+module.exports = {
+	proxy
+};

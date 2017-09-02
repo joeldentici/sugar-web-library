@@ -26,7 +26,7 @@ const response = exports.response = function(status) {
 			let stream = content;
 			//handle buffer content -> turn into a ReadableStream
 			if (content instanceof Buffer) {
-				headers['Content-Length'] = Buffer.byteLength(content);
+				headers['content-length'] = Buffer.byteLength(content);
 				stream = new PassThrough();
 				stream.end(content);
 			}
@@ -54,6 +54,8 @@ const response = exports.response = function(status) {
 const setHeader = exports.setHeader = function(header) {
 	return function(value) {
 		return function(context) {
+			header = header.toLowerCase();
+
 			const headers = JSON.parse(JSON.stringify(context.response.headers));
 			if (value)
 				headers[header] = value;

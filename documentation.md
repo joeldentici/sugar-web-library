@@ -13,6 +13,7 @@ Click a module name below to see its documentation
 * [Sugar.Combinators.Intermediate](#sugar-combinators-intermediate)
 * [Sugar.Combinators.Misc](#sugar-combinators-misc)
 * [Sugar.Combinators.Output](#sugar-combinators-output)
+* [Sugar.Combinators.Proxy](#sugar-combinators-proxy)
 * [Sugar.Combinators.Redirection](#sugar-combinators-redirection)
 * [Sugar.Combinators.RequestErrors](#sugar-combinators-requesterrors)
 * [Sugar.Combinators.ServerErrors](#sugar-combinators-servererrors)
@@ -570,6 +571,39 @@ value.
 
 Like response, but also sets the content type to
 text/plain.
+## Sugar.Combinators.Proxy
+<a name="sugar-combinators-proxy"></a>
+**Written By:** Joel Dentici
+
+**Written On:** 8/2/2017
+
+Combinators for proxying HTTP requests to another
+server.
+#### HttpRequestInfo :: Object
+
+An object with the following properties:
+
+url - string
+method - string
+headers - string
+
+These properties specify how the proxy agent
+will make the proxied request. The data for the
+request will be the same as the original.
+#### proxy :: (HttpRequest &#8594; HttpRequestInfo) &#8594; WebPart
+
+Proxy an HTTP request. The specified function is applied
+to every request to get an object describing where to make
+the proxied request.
+
+The data for the proxied request is exactly that of the
+original request. Due to this, you must set `parseForm` to
+false in your Sugar server config. To use form parsing with
+a server that does proxying, you must manually parse each form
+in your routes. If you do not set `parseForm` to false, then there
+will be no data left to pipe to the proxied request. At a later time,
+we may buffer the request body when automatically parsing a form, thus
+making a new request body stream available.
 ## Sugar.Combinators.Redirection
 <a name="sugar-combinators-redirection"></a>
 **Written By:** Joel Dentici

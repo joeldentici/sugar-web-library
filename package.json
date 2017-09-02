@@ -16,7 +16,7 @@
   },
   "main": "src/sugar.js",
   "scripts": {
-    "document": "hmdoc 'Sugar Web Library' src markdown > documentation.md",
+    "document": "hmdoc 'Sugar Web Library' src markdown .ejs > documentation.md",
     "testit": "nodeunit test",
     "coveragelcov": "nyc --reporter=lcov npm run testit",
     "coverage": "nyc npm run testit",
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "rx": "^4.1.0",
-    "monadic-js": "^1.2.0"
+    "monadic-js": "^1.2.2"
   },
   "devDependencies": {
     "coveralls": "^2.13.1",

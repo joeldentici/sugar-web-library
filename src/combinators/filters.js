@@ -108,6 +108,20 @@ exports.pathStarts = function(pathStr) {
 }
 
 /**
+ *	host :: string -> WebPart
+ *
+ *	Filters based on the host. This allows creating
+ *	routes based on the hostname for the request, so
+ *	multiple apps can be hosted on the same IP address.
+ */
+exports.host = function(host) {
+	return test(
+		ctx => ctx.request.host === host,
+		'Host match failure'
+	);
+}
+
+/**
  *	extract :: string -> string -> [int|number|string]
  *
  *	Extracts arguments from a text path that match

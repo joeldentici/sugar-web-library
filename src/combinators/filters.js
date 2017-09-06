@@ -188,7 +188,7 @@ exports.pathMatch = function(pattern, mapper) {
 }
 
 /**
- *	choose :: [WebPart] -> WebPart
+ *	choose :: ...WebPart -> WebPart
  *
  *	Picks from a list of WebParts by choosing the first WebPart that
  *	accepts the HttpContext provided.

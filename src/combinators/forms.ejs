@@ -1,0 +1,158 @@
+const {Utility, Async} = require('monadic-js');
+const {unless} = Utility;
+const {parseQuery, parsePlain} = require('../util/parsers.js');
+const {choose} = require('./filters.js');
+
+/**
+ *	Sugar.Combinators.Forms
+ *	written by Joel Dentici
+ *	on 9/5/2017
+ *
+ *	Combinators for parsing forms. These can be used instead
+ *	of automatic form parsing (eventually automatic parsing
+ *	will use these itself).
+ */
+
+/**
+ *	parseForm :: (string, ReadableStream -> Async Form) -> WebPart
+ *
+ *	Creates a WebPart that will apply the specified function to
+ *	the body of each request to get the form. The specified function
+ *	is only applied when the first argument matches the content type
+ *	of the request. Otherwise, the WebPart fails to match.
+ */
+function parseForm(contentType, parse) {
+	return context => do Async {
+		//ignore requests that don't match this parser's content type
+		rContentType = context.request.headers['content-type']
+		do! unless(rContentType == contentType, Async.fail())
+
+		//parse the form
+		form <- parse(context.request.body)
+
+		//update HttpContext with parsed form
+		return Object.assign({}, context, {
+			request: Object.assign({}, context.request, {
+				form
+			})
+		})
+	};
+}
+
+/**
+ *	parseFormBuffer :: (string, Buffer -> Form) -> WebPart
+ *
+ *	Creates a WebPart that will read all data from each
+ *	request into a buffer. The specified function is applied
+ *	to the buffer to get the form. The specified function is
+ *	only applied when the first argument matches the content
+ *	type of the request. Otherwise, the WebPart fails to match.
+ */
+function parseFormBuffer(contentType, parse) {
+	return parseForm(contentType, stream => Async.create((succ, fail) => {
+		//read all data into array of buffers
+		const buffers = [];
+		stream.on('data', chunk => {
+			buffers.push(chunk);
+		});
+
+		//concatenate buffer array and parse the resulting data
+		stream.on('end', () => {
+			const data = Buffer.concat(buffers);
+			succ(parse(data));
+		});
+	}));
+}
+
+/**
+ *	parseJSON :: Buffer -> Form
+ *
+ *	Parses a JSON form
+ */
+const parseJSON = buffer => JSON.parse(buffer.toString());
+/**
+ *	jsonParser :: WebPart
+ *
+ *	WebPart that parses JSON forms.
+ */
+const jsonParser = expr {
+		parseFormBuffer('text/json', parseJSON)
+	<|>
+		parseFormBuffer('application/json', parseJSON)
+};
+
+/**
+ *	urlParser :: WebPart
+ *
+ *	WebPart that parses URL encoded forms.
+ */
+const urlParser = parseFormBuffer(
+	'application/x-www-form-urlencoded',
+	buffer => parseQuery(buffer.toString())
+);
+
+/**
+ *	plainTextParser :: WebPart
+ *
+ *	WebPart that parses text/plain encoded forms.
+ */
+const plainTextParser = parseFormBuffer(
+	'text/plain',
+	buffer => parsePlain(buffer.toString())
+);
+
+/**
+ *	multiPartParser :: WebPart
+ *
+ *	WebPart that parses multipart/form-data encoded forms.
+ */
+const multiPartParser = parseForm('multipart/form-data', stream =>
+	Async.fail(new Error("Multipart form decoding not yet implemented!"))
+);
+
+/**
+ *	makeParser :: ...WebPart -> WebPart
+ *
+ *	Combines multiple form parsers into one. The result is
+ *	such that if none of the parsers match, the HttpContext
+ *	is propagated unchanged. This is to ensure that the next
+ *	handler in the route composition runs.
+ *
+ *	It is up to the user to ensure that they handle the case
+ *	of an empty form (there will always be an empty form on
+ *	the request if none was parsed).
+ */
+function makeParser(...parsers) {
+	const parse = choose(...parsers);
+	return expr {
+		parse <|> Async.of.bind(Async)
+	};
+}
+
+/**
+ *	defaultParser :: WebPart
+ *
+ *	Attempts to parse a form with one of the following types:
+ *
+ *	JSON
+ *	url encoded
+ *	plain text encoded
+ *	multipart encoded (always fails)
+ */
+const defaultParser = makeParser(
+	jsonParser,
+	urlParser,
+	plainTextParser,
+	multiPartParser
+);
+
+module.exports = {
+	parseForm,
+	parseFormBuffer,
+	makeParser,
+	jsonParser,
+	urlParser,
+	plainTextParser,
+	multiPartParser,
+	defaultParser
+};
